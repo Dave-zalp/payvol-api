@@ -1,0 +1,116 @@
+name: 🚀 Deploy payvol Project to Hostinger via SSH
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy to Host
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, bcmath, curl, xml, ctype, json, tokenizer
+          tools: composer
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
+
+      # Uncomment if using Vite or npm build
+      # - name: Build frontend assets
+      #   run: |
+      #     npm ci
+      #     npm run build
+
+      - name: Remove unnecessary files
+        run: |
+          rm -rf .git .github tests vendor node_modules
+          rm -rf storage/framework/cache/* storage/framework/sessions/* storage/framework/views/* storage/logs/*
+          rm -f .env .env.example
+
+      - name: Deploy files via SFTP
+        uses: wlixcc/SFTP-Deploy-Action@v1.2.4
+        with:
+          username: ${{ secrets.PAYVOL_SSH_USER }}
+          server: ${{ secrets.PAYVOL_SSH_HOST }}
+          port: ${{ secrets.PAYVOL_SSH_PORT }}
+          ssh_private_key: ${{ secrets.PAYVOL_SSH_KEY }}
+          local_path: './'
+          remote_path: ${{ secrets.PAYVOL_DEPLOY_PATH }}
+          sftp_only: true
+
+      - name: Run deployment commands
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.PAYVOL_SSH_HOST }}
+          username: ${{ secrets.PAYVOL_SSH_USER }}
+          key: ${{ secrets.PAYVOL_SSH_KEY }}
+          port: ${{ secrets.PAYVOL_SSH_PORT }}
+          script: |
+            set -e
+
+            echo "📍 Current location:"
+            pwd
+
+            echo "📂 Changing to deployment directory..."
+            cd ${{ secrets.PAYVOL_DEPLOY_PATH }}
+
+            echo "📍 Now at:"
+            pwd
+
+            echo "📄 Files in directory:"
+            ls -la
+
+            echo "🔍 Looking for artisan:"
+            ls -l artisan || echo "❌ artisan file not found!"
+
+            echo "🔍 Checking for views directory:"
+            ls -la resources/views || echo "❌ views directory not found!"
+
+            echo "📁 Creating necessary directories..."
+            mkdir -p storage/framework/{sessions,views,cache}
+            mkdir -p storage/logs
+            mkdir -p bootstrap/cache
+
+            echo "🔄 Running migrations..."
+            php artisan migrate
+
+            # Import service names to database
+            # php artisan sms:import-services
+
+            # echo "Composer autoload dump"
+            # composer dump-autoload
+
+            # echo "Seeding database"
+            # php artisan db:seed
+
+            echo "🗑️ Clearing old cache..."
+            php artisan optimize:clear
+
+            # echo "⚡ Optimizing Laravel..."
+            # php artisan config:cache
+
+            # # Only cache routes if you have route closures converted to controller methods
+            # # If you have closures in routes/web.php or routes/api.php, skip this
+            # if php artisan route:cache 2>/dev/null; then
+            #   echo "✅ Routes cached successfully"
+            # else
+            #   echo "⚠️ Route caching skipped (you may have route closures)"
+            # fi
+
+            echo "🔒 Setting permissions..."
+            chmod -R 775 storage bootstrap/cache
+
+            # If you're on shared hosting, you might need:
+            # find storage bootstrap/cache -type f -exec chmod 664 {} \;
+            # find storage bootstrap/cache -type d -exec chmod 775 {} \;
+
+            echo "✅ Deployment complete!"
