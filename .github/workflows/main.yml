@@ -80,8 +80,8 @@ jobs:
             mkdir -p storage/logs
             mkdir -p bootstrap/cache
 
-            # echo "🔄 Running migrations..."
-            # php artisan migrate
+            echo "🔄 Running migrations..."
+            php artisan migrate
 
 
             # echo "Composer autoload dump"
