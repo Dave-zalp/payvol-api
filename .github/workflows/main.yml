@@ -80,11 +80,9 @@ jobs:
             mkdir -p storage/logs
             mkdir -p bootstrap/cache
 
-            echo "🔄 Running migrations..."
-            php artisan migrate
+            # echo "🔄 Running migrations..."
+            # php artisan migrate
 
-            # Import service names to database
-            # php artisan sms:import-services
 
             # echo "Composer autoload dump"
             # composer dump-autoload

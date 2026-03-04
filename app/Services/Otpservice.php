@@ -1,7 +1,11 @@
 <?php
 
+namespace App\Services;
+
 use App\Models\Otp;
 use Illuminate\Support\Facades\Hash;
+use Exception;
+
 
 class OtpService
 {

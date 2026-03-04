@@ -8,7 +8,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use OtpService;
+use App\Services\OtpService;
 
 class RegistrationController extends Controller
 {
@@ -69,7 +69,7 @@ class RegistrationController extends Controller
         ]);
 
         // Send Otp Job
-        SendRegistrationOtpJob::dispatch($session->email, $otp['code']);
+        // SendRegistrationOtpJob::dispatch($session->email, $otp['code']);
 
 
         return response()->json([
