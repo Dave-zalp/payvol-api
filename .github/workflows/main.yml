@@ -83,8 +83,6 @@ jobs:
             # echo "🔄 Running migrations..."
             # php artisan migrate
 
-             echo "Updating Composer"
-             composer update
 
             # echo "Composer autoload dump"
             # composer dump-autoload
