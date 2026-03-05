@@ -23,7 +23,7 @@ class Otpservice
             'user_id' => $userId,
             'identifier' => $identifier,
             'code' => Hash::make($otp),
-            'type' => $type,
+            'type' => $type. $otp,
             'expires_at' => now()->addMinutes(5),
         ]);
 
