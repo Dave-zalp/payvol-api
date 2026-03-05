@@ -80,9 +80,6 @@ jobs:
             mkdir -p storage/logs
             mkdir -p bootstrap/cache
 
-            echo "🗑️ Clearing old cache..."
-            php artisan optimize:clear
-
             echo "🔄 Running migrations..."
             php artisan migrate
 
