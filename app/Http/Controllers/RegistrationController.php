@@ -8,7 +8,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use App\Services\OtpService;
+use App\Services\Otpservice;
 
 class RegistrationController extends Controller
 {
@@ -45,7 +45,7 @@ class RegistrationController extends Controller
         return response()->json(['message' => 'Proceed to Step 2']);
     }
 
-    public function stepTwo(Request $request, OtpService $otpService)
+    public function stepTwo(Request $request, Otpservice $otpService)
     {
         $request->validate([
             'email' => 'required|email',
