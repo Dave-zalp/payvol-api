@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Hash;
 use Exception;
 
 
-class OtpService
+class Otpservice
 {
     public function generate($identifier, $type, $userId = null)
     {
