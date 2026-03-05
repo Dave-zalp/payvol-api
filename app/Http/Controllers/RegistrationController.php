@@ -77,7 +77,7 @@ class RegistrationController extends Controller
         ]);
     }
 
-    public function verifyOtp(Request $request)
+    public function verifyOtp(Request $request, Otpservice $otpService)
     {
         $request->validate([
             'email' => 'required|email',
@@ -86,23 +86,29 @@ class RegistrationController extends Controller
 
         $session = RegistrationSession::where('email', $request->email)->firstOrFail();
 
-        if (now()->gt($session->otp_expires_at)) {
-            return response()->json(['error' => 'OTP expired'], 400);
+        try {
+
+            $otpService->verify(
+                $request->email,   // identifier
+                'registration',    // OTP type
+                $request->otp      // user input OTP
+            );
+
+            $session->update([
+                'current_step' => 4
+            ]);
+
+            return response()->json([
+                'message' => 'OTP verified successfully'
+            ]);
+
+        } catch (Exception $e) {
+
+            return response()->json([
+                'error' => $e->getMessage()
+            ], 400);
+
         }
-
-        if (!Hash::check($request->otp, $session->otp)) {
-            return response()->json(['error' => 'Invalid OTP'], 400);
-        }
-
-        $session->update([
-            'otp' => null,
-            'otp_expires_at' => null,
-            'current_step' => 4
-        ]);
-
-        return response()->json([
-            'message' => 'OTP verified successfully'
-        ]);
     }
 
     public function stepFour(Request $request)
