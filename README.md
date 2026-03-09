@@ -1,59 +1,237 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Fintech Backend Roadmap – TODO
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Phase 1 — Core Account System (Already In Progress)
 
-## About Laravel
+* [x] User registration (multi–step flow)
+* [x] Email OTP verification
+* [x] Password creation
+* [x] Transaction PIN setup
+* [x] Sanctum authentication
+* [x] Registration session handling
+* [x] Reusable OTP service
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+# Phase 2 — KYC Verification System
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Database
 
-## Learning Laravel
+* [ ] Create `kyc_verifications` table
+* [ ] Fields:
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+  * `user_id`
+  * `bvn`
+  * `nin`
+  * `document_type`
+  * `document_number`
+  * `selfie_image`
+  * `document_image`
+  * `status (pending, verified, rejected)`
+  * `verified_at`
+  * `rejection_reason`
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Models
 
-## Laravel Sponsors
+* [ ] Create `KycVerification` model
+* [ ] Add relationship in `User` model
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## API Endpoints
 
-### Premium Partners
+* [ ] `POST /kyc/start`
+* [ ] `POST /kyc/upload-document`
+* [ ] `POST /kyc/selfie`
+* [ ] `POST /kyc/submit`
+* [ ] `GET /kyc/status`
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## Logic
 
-## Contributing
+* [ ] Validate KYC data
+* [ ] Store document uploads securely
+* [ ] Restrict certain features if KYC not completed
+* [ ] Add KYC status middleware
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+---
 
-## Code of Conduct
+# Phase 3 — Naira Virtual Account Integration
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Database
 
-## Security Vulnerabilities
+* [ ] Create `virtual_accounts` table
+* Fields:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+  * `user_id`
+  * `account_name`
+  * `account_number`
+  * `bank_name`
+  * `provider`
+  * `provider_reference`
+  * `status`
+  * `created_at`
 
-## License
+## Services
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+* [ ] Create `StrowalletService`
+* [ ] Create virtual account method
+* [ ] Fetch virtual account details
+* [ ] Handle API errors
+
+## Controllers
+
+* [ ] `POST /wallets/virtual-naira/create`
+* [ ] `GET /wallets/virtual-naira`
+
+## Security
+
+* [ ] Prevent duplicate account creation
+* [ ] Require authentication
+* [ ] Log API responses
+
+---
+
+# Phase 4 — Deposit Webhooks
+
+## Webhook Endpoint
+
+* [ ] `POST /webhooks/strowallet/deposit`
+
+## Logic
+
+* [ ] Verify webhook signature
+* [ ] Identify user using account number
+* [ ] Record transaction
+* [ ] Credit ledger
+* [ ] Notify user
+
+## Database
+
+* [ ] `transactions` table
+* [ ] `ledger_entries` table
+
+---
+
+# Phase 5 — Ledger & Balance System
+
+## Database
+
+* [ ] `ledger_accounts`
+* [ ] `ledger_entries`
+* [ ] `transactions`
+
+## Logic
+
+* [ ] All balances derived from ledger
+* [ ] Debit and credit accounting system
+* [ ] Prevent negative balances
+* [ ] Wrap transactions in DB transactions
+
+---
+
+# Phase 6 — Virtual Card System
+
+## Database
+
+* [ ] `cards` table
+  Fields:
+* `user_id`
+* `card_provider`
+* `card_reference`
+* `last_four`
+* `expiry`
+* `currency`
+* `status`
+
+## Services
+
+* [ ] `CardService`
+* [ ] Create virtual card
+* [ ] Freeze card
+* [ ] Unfreeze card
+* [ ] Fund card
+
+## API Endpoints
+
+* [ ] `POST /cards/create`
+* [ ] `GET /cards`
+* [ ] `POST /cards/freeze`
+* [ ] `POST /cards/unfreeze`
+* [ ] `POST /cards/fund`
+
+---
+
+# Phase 7 — Transfers
+
+## Features
+
+* [ ] User → User transfer
+* [ ] Bank withdrawal
+* [ ] Card funding
+
+## Security
+
+* [ ] OTP verification
+* [ ] Transaction PIN verification
+* [ ] Rate limiting
+
+---
+
+# Phase 8 — Notifications
+
+* [ ] Email notifications
+* [ ] Push notifications
+* [ ] SMS alerts
+* [ ] Transaction alerts
+
+---
+
+# Phase 9 — Fraud Protection
+
+* [ ] Failed login detection
+* [ ] Suspicious transaction monitoring
+* [ ] IP tracking
+* [ ] Wallet freeze capability
+
+---
+
+# Phase 10 — Admin System
+
+* [ ] Admin dashboard
+* [ ] View users
+* [ ] Approve/reject KYC
+* [ ] View transactions
+* [ ] Freeze accounts
+* [ ] Manual ledger adjustments
+
+---
+
+# Phase 11 — Performance & Security
+
+* [ ] Queue system for emails & jobs
+* [ ] Redis caching
+* [ ] API rate limiting
+* [ ] Audit logs
+* [ ] Encrypted sensitive fields
+* [ ] Monitoring & error tracking
+
+---
+
+# Phase 12 — Production Readiness
+
+* [ ] API documentation
+* [ ] Postman collection
+* [ ] Automated tests
+* [ ] CI/CD pipeline
+* [ ] Server deployment
+* [ ] Backup system
+
+---
+
+# Optional Future Features
+
+* [ ] USD virtual accounts
+* [ ] Crypto wallets (USDT / USDC)
+* [ ] FX exchange system
+* [ ] Merchant payments
+* [ ] Bill payments
+* [ ] Debit cards
+
+---

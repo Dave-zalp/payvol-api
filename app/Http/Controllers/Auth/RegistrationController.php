@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Auth;
 
+use App\Http\Controllers\Controller;
 use App\Jobs\SendRegistrationOtpJob;
 use App\Models\RegistrationSession;
 use App\Models\User;
@@ -164,7 +165,7 @@ class RegistrationController extends Controller
 
             DB::commit();
 
-            $token = $user->createToken($request->device_name)->plainTextToken;
+            $token = $user->createToken(name: $request->device_name)->plainTextToken;
 
             return response()->json([
                 'message' => 'Account created successfully',

@@ -1,6 +1,8 @@
 <?php
 
-use App\Http\Controllers\RegistrationController;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\RegistrationController;
+use App\Http\Controllers\VirtualAccountController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -14,4 +16,12 @@ Route::prefix('auth')->group(function () {
     Route::post('/register/verify-otp', [RegistrationController::class, 'verifyOtp']);
     Route::post('/register/step-4', [RegistrationController::class, 'stepFour']);
     Route::post('/register/step-5', [RegistrationController::class, 'stepFive']);
+
+    Route::post('/login', [LoginController::class, 'login']);
+    Route::post('/login/verify-otp', [LoginController::class, 'verifyOtp']);
+});
+
+Route::middleware('auth:sanctum')->prefix('naira')->group(function () {
+    Route::post('/wallets/virtual/create', [VirtualAccountController::class, 'create']);
+    Route::get('/wallets/virtual', [VirtualAccountController::class, 'get']);
 });
