@@ -18,17 +18,19 @@
 
 * [ ] Create `kyc_verifications` table
 * [ ] Fields:
+* [ ] Add loggings to store log activities
 
   * `user_id`
-  * `bvn`
-  * `nin`
-  * `document_type`
-  * `document_number`
-  * `selfie_image`
-  * `document_image`
-  * `status (pending, verified, rejected)`
-  * `verified_at`
-  * `rejection_reason`
+  * `bvn_number` (int)
+  * `nin_number` (int)
+  * `selfie_image`(str)
+  * `nin_front`(str)
+  * `nin_back` (str)
+  * `nin_info` (json)
+  * `bvn_info` (json)
+  * `status (pending, verified, rejected)` (pending default)
+  * `verified_at` (null, default)
+  * `rejection_reason` (null, default)
 
 ## Models
 
@@ -235,3 +237,9 @@
 * [ ] Debit cards
 
 ---
+
+
+# PROD TODO
+* [ ] Host on a VPS
+* [ ] Move jobs to a redis server, and deal with redis failures
+* [ ]

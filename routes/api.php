@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegistrationController;
+use App\Http\Controllers\Kyc\KycVerificationController;
 use App\Http\Controllers\VirtualAccountController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -19,9 +20,16 @@ Route::prefix('auth')->group(function () {
 
     Route::post('/login', [LoginController::class, 'login']);
     Route::post('/login/verify-otp', [LoginController::class, 'verifyOtp']);
+
 });
 
-Route::middleware('auth:sanctum')->prefix('naira')->group(function () {
+Route::middleware(['auth:sanctum', 'kyc.check'])->prefix('naira')->group(function () {
+
+    # KYC
+    Route::post('/kyc/submit', [KycVerificationController::class, 'submit']);
+    Route::get('/kyc/status', [KycVerificationController::class, 'status']);
+
+
     Route::post('/wallets/virtual/create', [VirtualAccountController::class, 'create']);
     Route::get('/wallets/virtual', [VirtualAccountController::class, 'get']);
 });

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\CheckKycStatus;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -12,7 +13,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Register KYC middleware for routes
+        $middleware->alias([
+            'kyc.check' => CheckKycStatus::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
