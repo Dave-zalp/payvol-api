@@ -23,13 +23,19 @@ Route::prefix('auth')->group(function () {
 
 });
 
-Route::middleware(['auth:sanctum', 'kyc.check'])->prefix('naira')->group(function () {
+Route::middleware(['auth:sanctum', 'kyc.check'])->group(function () {
 
     # KYC
     Route::post('/kyc/submit', [KycVerificationController::class, 'submit']);
     Route::get('/kyc/status', [KycVerificationController::class, 'status']);
 
 
+   #naira
+   Route::prefix('naira')->group(function () {
+
     Route::post('/wallets/virtual/create', [VirtualAccountController::class, 'create']);
     Route::get('/wallets/virtual', [VirtualAccountController::class, 'get']);
+
+   });
+
 });
