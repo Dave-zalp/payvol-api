@@ -6,10 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Jobs\SendRegistrationOtpJob;
 use App\Models\RegistrationSession;
 use App\Models\User;
+use App\Services\Otpservice;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use App\Services\Otpservice;
 
 class RegistrationController extends Controller
 {
@@ -62,15 +62,16 @@ class RegistrationController extends Controller
             userId: null // user not created yet
         );
 
+        // Send Otp Job
+        SendRegistrationOtpJob::dispatch($session->email, $otp);
+
         $session->update([
             'password' => Hash::make($request->password),
-            'otp' => Hash::make($otp['code']), // Hash OTP!
-            'otp_expires_at' => $otp ['expires_at'],
+            'otp' => Hash::make($otp), // Hash OTP!
+            'otp_expires_at' => now()->addMinutes(5),
             'current_step' => 3
         ]);
 
-        // Send Otp Job
-        // SendRegistrationOtpJob::dispatch($session->email, $otp['code']);
 
 
         return response()->json([

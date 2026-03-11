@@ -23,14 +23,11 @@ class Otpservice
             'user_id' => $userId,
             'identifier' => $identifier,
             'code' => Hash::make($otp),
-            'type' => $type. $otp,
+            'type' => $type,
             'expires_at' => now()->addMinutes(5),
         ]);
 
-        // Dispatch async job
-        // SendOtpJob::dispatch($identifier, $otp, $type);
-
-        return $record;
+        return $otp;
     }
 
     public function verify($identifier, $type, $inputOtp)

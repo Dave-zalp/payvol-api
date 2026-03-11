@@ -3,11 +3,12 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Jobs\SendOtpJob;
 use App\Models\RegistrationSession;
+use App\Models\User;
+use App\Services\Otpservice;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use App\Services\Otpservice;
 
 class LoginController extends Controller
 {
@@ -69,6 +70,9 @@ class LoginController extends Controller
             type: 'login',
             userId: $user->id
         );
+
+        // Dispatch async job
+        SendOtpJob::dispatch($user->email, $otp, 'Login');
 
         return response()->json([
             'message' => 'OTP sent to email'
