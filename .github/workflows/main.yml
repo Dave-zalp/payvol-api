@@ -83,8 +83,8 @@ jobs:
             echo "🔄 Running migrations..."
             php artisan migrate
 
-            echo "make private storage app"
-            mkdir storage/app/private
+            # echo "make private storage app"
+            # mkdir storage/app/private
 
             # echo "Composer autoload dump"
             # composer dump-autoload
