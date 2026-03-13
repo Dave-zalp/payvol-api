@@ -13,12 +13,14 @@ class RegistrationOtpMail extends Mailable
 {
     use Queueable, SerializesModels;
 
+    public $otp;
+
     /**
      * Create a new message instance.
      */
-    public function __construct()
+    public function __construct($otp)
     {
-        //
+        $this->otp = $otp;
     }
 
     /**
@@ -27,7 +29,7 @@ class RegistrationOtpMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Registration Otp Mail',
+            subject: 'Registration Mail OTP',
         );
     }
 
@@ -37,14 +39,15 @@ class RegistrationOtpMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'view.name',
+            view: 'mail.registerOtp',
+            with: [
+                'otp' => $this->otp
+            ]
         );
     }
 
     /**
      * Get the attachments for the message.
-     *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
      */
     public function attachments(): array
     {

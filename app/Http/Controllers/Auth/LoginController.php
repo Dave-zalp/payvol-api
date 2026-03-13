@@ -23,19 +23,19 @@ class LoginController extends Controller
 
         $email = $request->email;
 
-        /*
-        |--------------------------------------------------------------------------
-        | Check if user is mid-registration
-        |--------------------------------------------------------------------------
-        */
+        // /*
+        // |--------------------------------------------------------------------------
+        // | Check if user is mid-registration
+        // |--------------------------------------------------------------------------
+        // */
 
         $registrationSession = RegistrationSession::where('email', $email)->first();
 
         if ($registrationSession) {
 
             return response()->json([
-                'message' => 'Resume registration',
-                'next_step' => $registrationSession->current_step
+                'message' => 'Incomplete Registration',
+                // 'next_step' => $registrationSession->current_step
             ]);
         }
 
