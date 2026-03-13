@@ -53,7 +53,7 @@ class RegistrationController extends Controller
             'password' => 'required|min:8|confirmed'
         ]);
 
-        $session = RegistrationSession::where('email', $request->email)->firstOrFail();
+        $session = RegistrationSession::where('email', $request->email)->where('current_step', 2)->firstOrFail();
 
         // Generate OTP via reusable service
        $otp = $otpService->generate(
@@ -86,7 +86,7 @@ class RegistrationController extends Controller
             'otp' => 'required|digits:6'
         ]);
 
-        $session = RegistrationSession::where('email', $request->email)->firstOrFail();
+        $session = RegistrationSession::where('email', $request->email)->where('current_step', 3)->firstOrFail();
 
         try {
 
@@ -120,7 +120,7 @@ class RegistrationController extends Controller
             'purpose' => 'required|string'
         ]);
 
-        $session = RegistrationSession::where('email', $request->email)->firstOrFail();
+        $session = RegistrationSession::where('email', $request->email)->where('current_step', 4)->firstOrFail();
 
         $data = $session->step_data;
         $data['purpose'] = $request->purpose;
@@ -140,7 +140,7 @@ class RegistrationController extends Controller
             'pin' => 'required|digits:4|confirmed'
         ]);
 
-        $session = RegistrationSession::where('email', $request->email)->firstOrFail();
+        $session = RegistrationSession::where('email', $request->email)->where('current_step', 5)->firstOrFail();
 
         DB::beginTransaction();
 
