@@ -24,7 +24,7 @@ class Otpservice
             'identifier' => $identifier,
             'code' => Hash::make($otp),
             'type' => $type,
-            'expires_at' => now()->addMinutes(5),
+            'expires_at' => now()->addMinutes(30),
         ]);
 
         return $otp;
@@ -39,20 +39,28 @@ class Otpservice
             ->first();
 
         if (!$otp) {
-            throw new Exception("OTP not found.");
+            return response()->json([
+              'message' => 'Invalid OTP.'
+           ], 400);
         }
 
         if ($otp->isExpired()) {
-            throw new Exception("OTP expired.");
+            return response()->json([
+              'message' => 'OTP EXPIRED.'
+           ], 400);
         }
 
         if ($otp->isMaxAttemptsReached()) {
-            throw new Exception("Maximum attempts reached.");
+            return response()->json([
+              'message' => 'Maximum Attempts Reached.'
+           ], 400);
         }
 
         if (!Hash::check($inputOtp, $otp->code)) {
             $otp->increment('attempts');
-            throw new Exception("Invalid OTP.");
+            return response()->json([
+              'message' => 'Invalid OTP.'
+           ], 400);
         }
 
         $otp->update([
