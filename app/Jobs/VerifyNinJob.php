@@ -38,7 +38,8 @@ class VerifyNinJob implements ShouldQueue
             'nin' => $kyc->nin_number,
             'firstname' => $user->first_name,
             'surname' => $user->surname,
-            'dob' => $user->dob,
+            'dob' => '20-10-2003',
+            // 'dob' => $user->dob,
             'phone' => $user->phone
         ]);
 

@@ -242,4 +242,4 @@
 # PROD TODO
 * [ ] Host on a VPS
 * [ ] Move jobs to a redis server, and deal with redis failures
-* [ ]
+* [ ] Add Dob to registration
