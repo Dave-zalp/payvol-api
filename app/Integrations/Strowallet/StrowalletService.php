@@ -41,21 +41,23 @@ class StrowalletService
         ]);
 
         try {
+
             $response = Http::timeout(30)
                 ->retry(3, 2000)
-                ->post($endpoint, $payload);
+                ->withQueryParameters($payload)
+                ->post($endpoint);
 
             Log::info('Strowallet BVN Verification Response', [
                 'status' => $response->status(),
-                'response' => $response->json()
+                'body' => $response->body()
             ]);
 
             return $response->json();
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
 
             Log::error('Strowallet BVN Verification Failed', [
-                'error' => $e->getMessage()
+                'message' => $e->getMessage()
             ]);
 
             throw $e;
@@ -69,31 +71,34 @@ class StrowalletService
     {
         $endpoint = $this->baseUrl . '/api/kyc_getbvn/';
 
+        $payload = [
+            'public_key' => $this->publicKey,
+            'number' => $bvn
+        ];
+
         Log::info('Strowallet Get BVN Details Request', [
             'endpoint' => $endpoint,
-            'bvn' => $bvn
+            'payload' => $payload
         ]);
 
         try {
 
             $response = Http::timeout(30)
                 ->retry(3, 2000)
-                ->get($endpoint, [
-                    'public_key' => $this->publicKey,
-                    'number' => $bvn
-                ]);
+                ->withQueryParameters($payload)
+                ->get($endpoint);
 
             Log::info('Strowallet Get BVN Details Response', [
                 'status' => $response->status(),
-                'response' => $response->json()
+                'body' => $response->body()
             ]);
 
             return $response->json();
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
 
             Log::error('Strowallet Get BVN Details Failed', [
-                'error' => $e->getMessage()
+                'message' => $e->getMessage()
             ]);
 
             throw $e;
@@ -105,7 +110,7 @@ class StrowalletService
      */
     public function verifyNin(array $data)
     {
-        $endpoint = $this->baseUrl.'/api/kyc_verinin/';
+        $endpoint = $this->baseUrl . '/api/kyc_verinin/';
 
         $payload = [
             'public_key' => $this->publicKey,
@@ -113,7 +118,7 @@ class StrowalletService
             'surname' => strtoupper($data['surname']),
             'firstname' => strtoupper($data['firstname']),
             'birthdate' => $data['dob'],
-            'telephoneno' => $data['phone'],
+            'telephoneno' => $data['phone']
         ];
 
         Log::info('Strowallet NIN Verification Request', [
@@ -125,19 +130,20 @@ class StrowalletService
 
             $response = Http::timeout(30)
                 ->retry(3, 2000)
-                ->post($endpoint, $payload);
+                ->withQueryParameters($payload)
+                ->post($endpoint);
 
             Log::info('Strowallet NIN Verification Response', [
                 'status' => $response->status(),
-                'response' => $response->json()
+                'body' => $response->body()
             ]);
 
             return $response->json();
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
 
             Log::error('Strowallet NIN Verification Failed', [
-                'error' => $e->getMessage()
+                'message' => $e->getMessage()
             ]);
 
             throw $e;
@@ -147,35 +153,38 @@ class StrowalletService
     /**
      * Get NIN Details
      */
-    public function getNinDetails($nin)
+    public function getNinDetails(string $nin)
     {
-        $endpoint = $this->baseUrl.'/api/kyc_getnin/';
+        $endpoint = $this->baseUrl . '/api/kyc_getnin/';
+
+        $payload = [
+            'public_key' => $this->publicKey,
+            'number_nin' => $nin
+        ];
 
         Log::info('Strowallet Get NIN Details Request', [
             'endpoint' => $endpoint,
-            'nin' => $nin
+            'payload' => $payload
         ]);
 
         try {
 
             $response = Http::timeout(30)
                 ->retry(3, 2000)
-                ->get($endpoint, [
-                    'public_key' => $this->publicKey,
-                    'number_nin' => $nin
-                ]);
+                ->withQueryParameters($payload)
+                ->get($endpoint);
 
             Log::info('Strowallet Get NIN Details Response', [
                 'status' => $response->status(),
-                'response' => $response->json()
+                'body' => $response->body()
             ]);
 
             return $response->json();
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
 
             Log::error('Strowallet Get NIN Details Failed', [
-                'error' => $e->getMessage()
+                'message' => $e->getMessage()
             ]);
 
             throw $e;
