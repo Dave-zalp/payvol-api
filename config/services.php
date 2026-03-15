@@ -34,5 +34,9 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+    'strowallet' => [
+        'url' => env('STROWALLET_BASE_URL'),
+        'public_key' => env('STROWALLET_PUBLIC_KEY')
+    ]
 
 ];
