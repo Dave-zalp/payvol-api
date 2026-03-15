@@ -22,7 +22,13 @@ class KycVerificationController extends Controller
             'nin_back' => 'nullable|image|max:2048'
         ]);
 
-        $user = Auth::user();
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'Unauthenticated'
+            ], 401);
+       }
 
         $existing = KycVerification::where('user_id', auth()->id())
         ->where('status','pending')
