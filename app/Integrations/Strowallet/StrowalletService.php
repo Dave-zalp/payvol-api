@@ -23,7 +23,7 @@ class StrowalletService
      */
     public function verifyBvn(array $data)
     {
-        $endpoint = $this->baseUrl . '/api/kyc_bvn/';
+        $endpoint = $this->baseUrl . '/kyc_bvn/';
 
         $payload = [
             'public_key' => $this->publicKey,
@@ -69,7 +69,7 @@ class StrowalletService
      */
     public function getBvnDetails(string $bvn)
     {
-        $endpoint = $this->baseUrl . '/api/kyc_getbvn/';
+        $endpoint = $this->baseUrl . '/kyc_getbvn/';
 
         $payload = [
             'public_key' => $this->publicKey,
@@ -110,7 +110,7 @@ class StrowalletService
      */
     public function verifyNin(array $data)
     {
-        $endpoint = $this->baseUrl . '/api/kyc_verinin/';
+        $endpoint = $this->baseUrl . '/kyc_verinin/';
 
         $payload = [
             'public_key' => $this->publicKey,
@@ -155,7 +155,7 @@ class StrowalletService
      */
     public function getNinDetails(string $nin)
     {
-        $endpoint = $this->baseUrl . '/api/kyc_getnin/';
+        $endpoint = $this->baseUrl . '/kyc_getnin/';
 
         $payload = [
             'public_key' => $this->publicKey,
