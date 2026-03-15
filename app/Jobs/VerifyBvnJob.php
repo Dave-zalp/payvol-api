@@ -25,7 +25,6 @@ class VerifyBvnJob implements ShouldQueue
 
     public function handle(StrowalletService $strowallet)
     {
-
         $kyc = KycVerification::with('user')->find($this->kycId);
 
         if (!$kyc) {
@@ -34,32 +33,44 @@ class VerifyBvnJob implements ShouldQueue
 
         $user = $kyc->user;
 
-        $response = $strowallet->verifyBvn([
+        try {
 
-            'bvn' => $kyc->bvn_number,
-            'first_name' => $user->first_name,
-            'last_name' => $user->surname,
-            'dob' => '20-10-2003',
-            // 'dob' => $user->dob,
-            'phone' => $user->phone
-
-        ]);
-
-        if ($response['status'] === true) {
-
-            $kyc->update(attributes: [
-                'bvn_status' => 'verified',
+            $response = $strowallet->verifyBvn([
+                'bvn' => $kyc->bvn_number,
+                'first_name' => $user->first_name,
+                'last_name' => $user->surname,
+                'dob' => '20-10-2003',
+                // 'dob' => $user->dob,
+                'phone' => $user->phone
             ]);
 
-        } else {
+            if (($response['status'] ?? false) === true) {
+
+                $kyc->update([
+                    'bvn_status' => 'verified',
+                ]);
+
+            } else {
+
+                $kyc->update([
+                    'bvn_status' => 'rejected',
+                ]);
+
+            }
+
+        } catch (\Throwable $e) {
+
+            // API error (400, 500 etc)
 
             $kyc->update([
                 'bvn_status' => 'rejected',
             ]);
 
-            throw new Exception('BVN verification failed');
+            \Log::error('BVN verification job failed', [
+                'kyc_id' => $kyc->id,
+                'error' => $e->getMessage()
+            ]);
 
         }
-
     }
 }

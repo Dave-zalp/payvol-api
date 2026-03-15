@@ -31,25 +31,39 @@ class FetchBvnDetailsJob implements ShouldQueue
             return;
         }
 
-        // Call Strowallet API to fetch BVN details
-        $response = $strowallet->getBvnDetails($kyc->bvn_number);
+        try {
+             // Call Strowallet API to fetch BVN details
+            $response = $strowallet->getBvnDetails($kyc->bvn_number);
 
-        // If API returned valid data
-        if (isset($response['firstName'])) {
+            // If API returned valid data
+            if (isset($response['firstName'])) {
 
-            $kyc->update([
-                'bvn_info' => $response
-            ]);
+                $kyc->update([
+                    'bvn_info' => $response
+                ]);
 
-        } else {
+            } else {
 
+                $kyc->update([
+                    'status' => 'rejected',
+                    'rejection_reason' => 'Unable to fetch BVN details'
+                ]);
+
+                throw new Exception('Failed to get BVN details');
+
+            }
+        } catch (\Throwable $e) {
             $kyc->update([
                 'status' => 'rejected',
                 'rejection_reason' => 'Unable to fetch BVN details'
             ]);
 
-            throw new Exception('Failed to get BVN details');
+            \Log::error('BVN Failed to Fetch', [
+                'kyc_id' => $kyc->id,
+                'error' => $e->getMessage()
+            ]);
 
+            throw new Exception('Failed to get BVN details');
         }
 
     }
