@@ -62,6 +62,7 @@ class VerifyNinJob implements ShouldQueue
 
                 $kyc->update([
                     'nin_status' => 'rejected',
+                    'status' => 'rejected'
                 ]);
 
                 Log::warning('NIN verification rejected', [
@@ -77,6 +78,7 @@ class VerifyNinJob implements ShouldQueue
 
             $kyc->update([
                 'nin_status' => 'rejected',
+                'status' => 'rejected'
             ]);
 
             Log::error('NIN verification job failed', [

@@ -54,6 +54,7 @@ class VerifyBvnJob implements ShouldQueue
 
                 $kyc->update([
                     'bvn_status' => 'rejected',
+                    'status' => 'rejected'
                 ]);
 
             }
@@ -64,6 +65,7 @@ class VerifyBvnJob implements ShouldQueue
 
             $kyc->update([
                 'bvn_status' => 'rejected',
+                'status' => 'rejected'
             ]);
 
             \Log::error('BVN verification job failed', [
