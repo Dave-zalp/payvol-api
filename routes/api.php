@@ -22,11 +22,10 @@ Route::prefix('auth')->group(function () {
     Route::post('/login/verify-otp', [LoginController::class, 'verifyOtp']);
 
 });
-
-Route::middleware(['auth:sanctum', 'kyc.check'])->group(function () {
-
     # KYC
     Route::post('/kyc/submit', [KycVerificationController::class, 'submit']);
+
+    Route::middleware(['auth:sanctum', 'kyc.check'])->group(function () {
     Route::get('/kyc/status', [KycVerificationController::class, 'status']);
 
 
@@ -38,4 +37,4 @@ Route::middleware(['auth:sanctum', 'kyc.check'])->group(function () {
 
    });
 
-});
+  });
