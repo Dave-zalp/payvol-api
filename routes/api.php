@@ -22,19 +22,20 @@ Route::prefix('auth')->group(function () {
     Route::post('/login/verify-otp', [LoginController::class, 'verifyOtp']);
 
 });
-    # KYC
-    Route::post('/kyc/submit', [KycVerificationController::class, 'submit']);
 
-    Route::middleware(['auth:sanctum', 'kyc.check'])->group(function () {
-    Route::get('/kyc/status', [KycVerificationController::class, 'status']);
+    Route::middleware(['auth:sanctum'])->group(function () {
 
+        # KYC
+        Route::post('/kyc/submit', [KycVerificationController::class, 'submit']);
 
-   #naira
-   Route::prefix('naira')->group(function () {
+        Route::middleware(['kyc.check'])->group(function () {
+            Route::get('/kyc/status', [KycVerificationController::class, 'status']);
 
-    Route::post('/wallets/virtual/create', [VirtualAccountController::class, 'create']);
-    Route::get('/wallets/virtual', [VirtualAccountController::class, 'get']);
+            #naira
+            Route::prefix('naira')->group(function () {
+                Route::post('/wallets/virtual/create', [VirtualAccountController::class, 'create']);
+                Route::get('/wallets/virtual', [VirtualAccountController::class, 'get']);
+            });
 
-   });
-
+    });
   });
