@@ -39,8 +39,8 @@ class KycService
 
         Bus::chain([
             new VerifyBvnJob($kyc->id),
-            new FetchBvnDetailsJob($kyc->id),
             new VerifyNinJob($kyc->id),
+            new FetchBvnDetailsJob($kyc->id),
             new FetchNinDetailsJob($kyc->id),
         ])->dispatch();
 
