@@ -20,6 +20,11 @@ class KycService
             [
                 'bvn_number' => $data['bvn_number'] ?? null,
                 'nin_number' => $data['nin_number'] ?? null,
+                'dob' => $data['dob'] ?? null,
+                'home_address'  => $data['home_address'],
+                'state'  => $data['state'],
+                'city'  => $data['city'],
+                'zip_code'  => $data['zip_code'],
 
                 'selfie_image' => isset($data['selfie_image'])
                     ? $this->storeSecureImage($data['selfie_image'], 'selfies')
@@ -40,8 +45,8 @@ class KycService
         Bus::chain([
             new VerifyBvnJob($kyc->id),
             new VerifyNinJob($kyc->id),
-            new FetchBvnDetailsJob($kyc->id),
-            new FetchNinDetailsJob($kyc->id),
+            new FetchBvnDetailsJob($kyc->id),  // Doesn't work cos feature is not allowed
+            new FetchNinDetailsJob($kyc->id),   // Doesn't work cos feature is not allowed
         ])->dispatch();
 
 

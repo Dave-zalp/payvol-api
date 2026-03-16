@@ -39,7 +39,7 @@ class VerifyBvnJob implements ShouldQueue
                 'bvn' => $kyc->bvn_number,
                 'first_name' => $user->first_name,
                 'last_name' => $user->surname,
-                'dob' => '20-10-2003',
+                'dob' => $kyc->dob,
                 // 'dob' => $user->dob,
                 'phone' => $user->phone
             ]);

@@ -40,7 +40,7 @@ class FetchNinDetailsJob implements ShouldQueue
 
                 $kyc->update([
                     'nin_info' => $response,
-                    'status' => 'verified',
+                    // 'status' => 'verified',
                 ]);
 
             } else {

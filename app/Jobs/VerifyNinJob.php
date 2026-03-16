@@ -56,6 +56,7 @@ class VerifyNinJob implements ShouldQueue
 
                 $kyc->update([
                     'nin_status' => 'verified',
+                    'status' => 'verified',
                 ]);
 
             } else {

@@ -19,7 +19,12 @@ class KycVerificationController extends Controller
             'nin_number' => 'nullable|digits:11',
             'selfie_image' => 'nullable|image|max:2048',
             'nin_front' => 'nullable|image|max:2048',
-            'nin_back' => 'nullable|image|max:2048'
+            'nin_back' => 'nullable|image|max:2048',
+            'dob' => 'nullable|date',
+            'home_address'  => 'nullable|string|max:255',
+            'state'         => 'nullable|string|max:100',
+            'city'          => 'nullable|string|max:100',
+            'zip_code'      => 'nullable|string|max:20',
         ]);
 
         $user = $request->user();
@@ -40,7 +45,7 @@ class KycVerificationController extends Controller
             ], 409);
         }
 
-        $kyc = $kycService->submitKyc($user, $request->all());
+        $kyc = $kycService->submitKyc($user, $request->validated());
 
         return response()->json([
             'message' => 'KYC Verification in progress.',
