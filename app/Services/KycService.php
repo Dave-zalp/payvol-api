@@ -2,10 +2,10 @@
 
 namespace App\Services;
 
-use App\Jobs\FetchBvnDetailsJob;
-use App\Jobs\FetchNinDetailsJob;
-use App\Jobs\VerifyBvnJob;
-use App\Jobs\VerifyNinJob;
+use App\Jobs\Kyc\FetchBvnDetailsJob;
+use App\Jobs\Kyc\FetchNinDetailsJob;
+use App\Jobs\Kyc\VerifyBvnJob;
+use App\Jobs\Kyc\VerifyNinJob;
 use App\Models\KycVerification;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Str;
@@ -45,8 +45,8 @@ class KycService
         Bus::chain([
             new VerifyBvnJob($kyc->id),
             new VerifyNinJob($kyc->id),
-            new FetchBvnDetailsJob($kyc->id),  // Doesn't work cos feature is not allowed
-            new FetchNinDetailsJob($kyc->id),   // Doesn't work cos feature is not allowed
+           // new FetchBvnDetailsJob($kyc->id),  // Doesn't work cos feature is not allowed
+          //  new FetchNinDetailsJob($kyc->id),   // Doesn't work cos feature is not allowed
         ])->dispatch();
 
 

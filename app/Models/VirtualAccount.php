@@ -9,8 +9,13 @@ class VirtualAccount extends Model
     protected $fillable = [
         'user_id', 'account_name', 'account_number',
         'bank_name', 'provider_reference', 'balance',
-        'currency', 'provider_name'
+        'currency', 'provider_name', 'response'
     ];
+
+    protected $casts = [
+        'response' => 'array',
+        'balance'  => 'decimal:2',
+   ];
 
     public function user() {
         return $this->belongsTo(User::class);

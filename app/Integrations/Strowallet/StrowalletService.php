@@ -10,12 +10,14 @@ class StrowalletService
     protected $baseUrl;
     protected $publicKey;
     protected $mode;
+    protected $webhook_url;
 
     public function __construct()
     {
         $this->baseUrl = rtrim(config('services.strowallet.url'), '/');
         $this->publicKey = config('services.strowallet.public_key');
         $this->mode = config('services.strowallet.mode', 'sandbox');
+        $this->webhook_url = config('services.strowallet.webhook_url');
     }
 
     /**
@@ -184,6 +186,53 @@ class StrowalletService
         } catch (\Throwable $e) {
 
             Log::error('Strowallet Get NIN Details Failed', [
+                'message' => $e->getMessage()
+            ]);
+
+            throw $e;
+        }
+    }
+
+    /**
+     * Create Virtual Bank Account
+     */
+    public function createVirtualAccount(array $data)
+    {
+        $endpoint = $this->baseUrl . '/virtual-bank/new-customer/';
+
+        $payload = [
+            'public_key'   => $this->publicKey,
+            'account_name' => $data['account_name'],
+            'email' => $data['email'],
+            'phone'        => $data['phone'],
+            'webhook_url'       => $this->webhook_url ?? null,
+            'mode'         => $this->mode,
+        ];
+
+        // Remove null values from payload
+        $payload = array_filter($payload, fn($value) => !is_null($value));
+
+        Log::info('Strowallet Create Virtual Account Request', [
+            'endpoint' => $endpoint,
+            'payload'  => $payload
+        ]);
+
+        try {
+
+            $response = Http::timeout(30)
+                ->retry(3, 2000)
+                ->post($endpoint, $payload);
+
+            Log::info('Strowallet Create Virtual Account Response', [
+                'status' => $response->status(),
+                'body'   => $response->body()
+            ]);
+
+            return $response->json();
+
+        } catch (\Throwable $e) {
+
+            Log::error('Strowallet Create Virtual Account Failed', [
                 'message' => $e->getMessage()
             ]);
 

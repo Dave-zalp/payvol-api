@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Jobs;
+namespace App\Jobs\Kyc;
 
 use App\Integrations\Strowallet\StrowalletService;
 use App\Models\KycVerification;
@@ -11,8 +11,9 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
-class FetchBvnDetailsJob implements ShouldQueue
+class VerifyBvnJob implements ShouldQueue
 {
+
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected $kycId;
@@ -24,47 +25,54 @@ class FetchBvnDetailsJob implements ShouldQueue
 
     public function handle(StrowalletService $strowallet)
     {
-
-        $kyc = KycVerification::find($this->kycId);
+        $kyc = KycVerification::with('user')->find($this->kycId);
 
         if (!$kyc) {
             return;
         }
 
-        try {
-             // Call Strowallet API to fetch BVN details
-            $response = $strowallet->getBvnDetails($kyc->bvn_number);
+        $user = $kyc->user;
 
-            // If API returned valid data
-            if (isset($response['firstName'])) {
+        try {
+
+            $response = $strowallet->verifyBvn([
+                'bvn' => $kyc->bvn_number,
+                'first_name' => $user->first_name,
+                'last_name' => $user->surname,
+                'dob' => $kyc->dob,
+                // 'dob' => $user->dob,
+                'phone' => $user->phone
+            ]);
+
+            if (($response['status'] ?? false) === true) {
 
                 $kyc->update([
-                    'bvn_info' => $response
+                    'bvn_status' => 'verified',
                 ]);
 
             } else {
 
                 $kyc->update([
-                    'status' => 'rejected',
-                    'rejection_reason' => 'Unable to fetch BVN details'
+                    'bvn_status' => 'rejected',
+                    'status' => 'rejected'
                 ]);
 
-                throw new Exception('Failed to get BVN details');
-
             }
+
         } catch (\Throwable $e) {
+
+            // API error (400, 500 etc)
+
             $kyc->update([
-                'status' => 'rejected',
-                'rejection_reason' => 'Unable to fetch BVN details'
+                'bvn_status' => 'rejected',
+                'status' => 'rejected'
             ]);
 
-            \Log::error('BVN Failed to Fetch', [
+            \Log::error('BVN verification job failed', [
                 'kyc_id' => $kyc->id,
                 'error' => $e->getMessage()
             ]);
 
-            throw new Exception('Failed to get BVN details');
         }
-
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Jobs;
+namespace App\Jobs\Kyc;
 
 use App\Integrations\Strowallet\StrowalletService;
 use App\Models\KycVerification;
