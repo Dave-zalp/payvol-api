@@ -47,7 +47,7 @@ class CrudController extends Controller
 
             return response()->json([
                 'status'  => false,
-                'message' => 'An unexpected error occurred. Please try again later.',
+                'message' => 'An unexpected error occurred. Please try again later.c.',
             ], 500);
         }
     }
