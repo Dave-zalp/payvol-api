@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Jobs;
+namespace App\Jobs\Virtual;
 
 use App\Services\VirtualBankAccountService;
 use App\Models\User;

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\VirtualBank;
 
 use App\Http\Controllers\Controller;
-use App\Jobs\CreateVirtualAccountJob;
+use App\Jobs\Virtual\CreateVirtualAccountJob;
 use App\Services\VirtualBankAccountService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
