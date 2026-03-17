@@ -218,7 +218,6 @@ class StrowalletService
         ]);
 
         try {
-
             $response = Http::timeout(30)
                 ->retry(3, 2000)
                 ->post($endpoint, $payload);

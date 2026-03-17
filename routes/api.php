@@ -3,7 +3,8 @@
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegistrationController;
 use App\Http\Controllers\Kyc\KycVerificationController;
-use App\Http\Controllers\VirtualAccountController;
+use App\Http\Controllers\VirtualBank\CrudController;
+use App\Http\Controllers\WalletController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -27,14 +28,14 @@ Route::prefix('auth')->group(function () {
 
         # KYC
         Route::post('/kyc/submit', [KycVerificationController::class, 'submit']);
+        Route::get('/wallets', [WalletController::class, 'index']);
 
         Route::middleware(['kyc.check'])->group(function () {
             Route::get('/kyc/status', [KycVerificationController::class, 'status']);
 
             #naira
             Route::prefix('naira')->group(function () {
-                Route::post('/wallets/virtual/create', [VirtualAccountController::class, 'create']);
-                Route::get('/wallets/virtual', [VirtualAccountController::class, 'get']);
+                Route::post('/virtualbank/create', [CrudController::class, 'create']);
             });
 
     });

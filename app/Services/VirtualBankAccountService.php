@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\VirtualBank;
+namespace App\Services;
 
 use App\Integrations\Strowallet\StrowalletService;
 use App\Models\VirtualAccount;

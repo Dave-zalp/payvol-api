@@ -3,7 +3,8 @@
 namespace App\Http\Controllers\VirtualBank;
 
 use App\Http\Controllers\Controller;
-use App\Services\VirtualBank\VirtualBankAccountService;
+use App\Jobs\CreateVirtualAccountJob;
+use App\Services\VirtualBankAccountService;
 use Illuminate\Http\Request;
 
 class CrudController extends Controller
@@ -28,14 +29,12 @@ class CrudController extends Controller
             ])));
 
 
-            // TODO: Make this a dispatchable Job
-            $virtualAccount = $this->service->createVirtualAccount($user);
+            CreateVirtualAccountJob::dispatch($user);
 
             return response()->json([
                 'status'  => true,
-                'message' => 'Virtual account created successfully.',
-                'data'    => $virtualAccount
-            ], 201);
+                'message' => 'Virtual account creation is being processed.',
+            ], 202);
 
         } catch (\Exception $e) {
 
