@@ -53,7 +53,7 @@ class VirtualBankAccountService
                 'account_name'       => $response['account_name'] ?? $user->name,
                 'account_number'     => $accountNumber,
                 'bank_name'          => $bankName ?? null,
-                'provider_reference' => $response['sessionId'] ?? null,
+                'provider_reference' => $response['sessionId'] ?? 'null',
                 'currency'           => $response['currency'] ?? 'NGN',
                 'provider_name'      => 'strowallet',
                 'balance'            => 0,
