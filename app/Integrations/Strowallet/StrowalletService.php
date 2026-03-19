@@ -17,7 +17,7 @@ class StrowalletService
         $this->baseUrl = rtrim(config('services.strowallet.url'), '/');
         $this->publicKey = config('services.strowallet.public_key');
         $this->mode = config('services.strowallet.mode', 'sandbox');
-        $this->webhook_url = config('services.strowallet.webhook_url');
+        $this->naira_virtual_bank_webhook_url = config('services.strowallet.naira_virtual_bank_webhook_url');
     }
 
     /**
@@ -205,7 +205,7 @@ class StrowalletService
             'account_name' => $data['account_name'],
             'email' => $data['email'],
             'phone'        => $data['phone'],
-            'webhook_url'       => $this->webhook_url ?? null,
+            'webhook_url'       => $this->naira_virtual_bank_webhook_url ?? null,
             'mode'         => $this->mode,
         ];
 

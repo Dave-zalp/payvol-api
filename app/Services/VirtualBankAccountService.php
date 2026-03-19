@@ -19,9 +19,16 @@ class VirtualBankAccountService
 
     public function createVirtualAccount($user)
     {
+
+        $accountName = trim(implode(' ', array_filter([
+            $user->first_name,
+            $user->middle_name,
+            $user->surname,
+        ])));
+
         $response = $this->integration->createVirtualAccount([
             'email'        => $user->email,
-            'account_name' => $user->name,
+            'account_name' => $accountName,
             'phone'        => $user->phone,
         ]);
 

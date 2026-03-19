@@ -36,7 +36,8 @@ return [
     ],
     'strowallet' => [
         'url' => env('STROWALLET_BASE_URL'),
-        'public_key' => env('STROWALLET_PUBLIC_KEY')
+        'public_key' => env('STROWALLET_PUBLIC_KEY'),
+        'naira_virtual_bank_webhook_url' => env('STROWALLET_NAIRA_VIRTUAL_BANK_WEBHOOK')
     ]
 
 ];

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\VirtualBank;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\Virtual\CreateVirtualAccountJob;
+use App\Models\VirtualAccount;
 use App\Services\VirtualBankAccountService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -23,12 +24,9 @@ class CrudController extends Controller
 
             $user = $request->user();
 
-            // Build full name
-            $user->name = trim(implode(' ', array_filter([
-                $user->first_name,
-                $user->middle_name,
-                $user->surname,
-            ])));
+            if (VirtualAccount::where('user_id', $user->id)->exists()) {
+                return;
+            }
 
             // Dispatch queue job
             CreateVirtualAccountJob::dispatch($user);

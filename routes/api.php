@@ -5,12 +5,15 @@ use App\Http\Controllers\Auth\RegistrationController;
 use App\Http\Controllers\Kyc\KycVerificationController;
 use App\Http\Controllers\VirtualBank\CrudController;
 use App\Http\Controllers\WalletController;
+use App\Http\Controllers\WebhookController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
+
+Route::post('/virtualbank/strollwallet/webhook', [WebhookController::class, 'virtualbank']);
 
 Route::prefix('auth')->group(function () {
     Route::post('/register/step-1', [RegistrationController::class, 'stepOne']);
