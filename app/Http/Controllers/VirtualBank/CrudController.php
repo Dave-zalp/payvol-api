@@ -51,4 +51,41 @@ class CrudController extends Controller
             ], 500);
         }
     }
+
+    public function show(Request $request)
+    {
+        try {
+            $user = $request->user();
+
+            $virtualAccount = VirtualAccount::where('user_id', $user->id)->first();
+
+            if (!$virtualAccount) {
+                return response()->json([
+                    'status'  => false,
+                    'message' => 'Virtual account not found.',
+                ], 404);
+            }
+
+            return response()->json([
+                'status' => true,
+                'data'   => [
+                    'account_name'   => $virtualAccount->account_name,
+                    'account_number' => $virtualAccount->account_number,
+                    'bank_name'      => $virtualAccount->bank_name,
+                    'currency'       => $virtualAccount->currency,
+                ]
+            ], 200);
+
+        } catch (\Throwable $e) {
+            \Log::error('Fetch Virtual Account Error', [
+                'user_id' => $request->user()?->id,
+                'message' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'status'  => false,
+                'message' => 'Unable to fetch virtual account.'
+            ], 500);
+        }
+    }
 }

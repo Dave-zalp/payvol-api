@@ -39,6 +39,7 @@ Route::prefix('auth')->group(function () {
             #naira
             Route::prefix('naira')->group(function () {
                 Route::post('/virtualbank/create', [CrudController::class, 'create']);
+                Route::get('/virtualbank/get', [CrudController::class, 'show']);
             });
 
     });
