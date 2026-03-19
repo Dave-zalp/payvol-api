@@ -32,7 +32,10 @@ class VirtualBankAccountService
             'phone'        => $user->phone,
         ]);
 
-        if (empty($response['accountNumber'])) {
+        $accountNumber = $response['account_number'] ?? null;
+        $bankName      = $response['bank_name'] ?? null;
+
+        if (empty($accountNumber)) {
             Log::warning('Strowallet Virtual Account Creation Failed', [
                 'user_id'  => $user->id,
                 'response' => $response
@@ -43,13 +46,13 @@ class VirtualBankAccountService
             throw new \Exception($response['message'] ?? 'Failed to create virtual account.');
         }
 
-        DB::transaction(function () use ($user, $response, &$virtualAccount) {
+        DB::transaction(function () use ($user, $response, $accountNumber, $bankName, &$virtualAccount) {
 
             $virtualAccount = VirtualAccount::create([
                 'user_id'            => $user->id,
-                'account_name'       => $user->name,
-                'account_number'     => $response['accountNumber'],
-                'bank_name'          => $response['sourceBankName'] ?? null,
+                'account_name'       => $response['account_name'] ?? $user->name,
+                'account_number'     => $accountNumber,
+                'bank_name'          => $bankName ?? null,
                 'provider_reference' => $response['sessionId'] ?? null,
                 'currency'           => $response['currency'] ?? 'NGN',
                 'provider_name'      => 'strowallet',
