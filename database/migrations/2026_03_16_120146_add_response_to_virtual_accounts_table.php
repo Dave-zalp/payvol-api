@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::table('virtual_accounts', function (Blueprint $table) {
             //
+            $table->json('response');
         });
     }
 
