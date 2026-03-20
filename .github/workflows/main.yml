@@ -21,18 +21,20 @@ jobs:
           extensions: mbstring, bcmath, curl, xml, ctype, json, tokenizer
           tools: composer
 
+      # OPTIONAL: Only if you want to build vendor locally (faster deploy)
+      # You can REMOVE this if server runs composer install
       - name: Install PHP dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
 
-      # Uncomment if using Vite or npm build
+      # Uncomment if using frontend build
       # - name: Build frontend assets
       #   run: |
       #     npm ci
       #     npm run build
 
-      - name: Remove unnecessary files
+      - name: Clean unnecessary files
         run: |
-          rm -rf .git .github tests vendor node_modules
+          rm -rf .git .github tests node_modules
           rm -rf storage/framework/cache/* storage/framework/sessions/* storage/framework/views/* storage/logs/*
           rm -f .env .env.example
 
@@ -57,66 +59,30 @@ jobs:
           script: |
             set -e
 
-            echo "📍 Current location:"
-            pwd
-
             echo "📂 Changing to deployment directory..."
             cd ${{ secrets.PAYVOL_DEPLOY_PATH }}
 
-            echo "📍 Now at:"
-            pwd
+            echo "📦 Installing dependencies..."
+            composer install --no-dev --optimize-autoloader
 
-            echo "📄 Files in directory:"
-            ls -la
-
-            echo "🔍 Looking for artisan:"
-            ls -l artisan || echo "❌ artisan file not found!"
-
-            echo "🔍 Checking for views directory:"
-            ls -la resources/views || echo "❌ views directory not found!"
-
-            echo "📁 Creating necessary directories..."
+            echo "📁 Setting up storage..."
             mkdir -p storage/framework/{sessions,views,cache}
             mkdir -p storage/logs
             mkdir -p bootstrap/cache
 
-            echo "🔄 Running migrations..."
-            php artisan migrate
-
-            echo "Install Cloudinary SDK"
-            composer require cloudinary-labs/cloudinary-laravel
-
-            echo "Invoke the cloudinary install command"
-            php artisan cloudinary:install
-
-            # echo "make private storage app"
-            # mkdir storage/app/private
-
-            # echo "Composer autoload dump"
-            # composer dump-autoload
-
-            # echo "Seeding database"
-            # php artisan db:seed
-
-            echo "🗑️ Clearing old cache..."
-            php artisan optimize:clear
-
-            # echo "⚡ Optimizing Laravel..."
-            # php artisan config:cache
-
-            # # Only cache routes if you have route closures converted to controller methods
-            # # If you have closures in routes/web.php or routes/api.php, skip this
-            # if php artisan route:cache 2>/dev/null; then
-            #   echo "✅ Routes cached successfully"
-            # else
-            #   echo "⚠️ Route caching skipped (you may have route closures)"
-            # fi
-
-            echo "🔒 Setting permissions..."
+            echo "🔑 Fixing permissions..."
             chmod -R 775 storage bootstrap/cache
 
-            # If you're on shared hosting, you might need:
-            # find storage bootstrap/cache -type f -exec chmod 664 {} \;
-            # find storage bootstrap/cache -type d -exec chmod 775 {} \;
+            echo "🗄️ Running migrations..."
+            php artisan migrate --force
 
-            echo "✅ Deployment complete!"
+            echo "☁️ Installing Cloudinary (if not already configured)..."
+            php artisan cloudinary:install || true
+
+            echo "🗑️ Clearing caches..."
+            php artisan optimize:clear
+
+            echo "⚡ Caching config..."
+            php artisan config:cache
+
+            echo "🚀 Deployment complete!"
