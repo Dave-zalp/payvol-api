@@ -8,6 +8,7 @@ use App\Jobs\Kyc\FetchNinDetailsJob;
 use App\Jobs\Kyc\VerifyBvnJob;
 use App\Jobs\Kyc\VerifyNinJob;
 use App\Models\KycVerification;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -16,6 +17,18 @@ class KycService
 {
     public function submitKyc($user, array $data)
     {
+        $selfie = isset($data['selfie_image'])
+            ? $this->storeSecureImage($data['selfie_image'], 'selfies')
+            : null;
+
+        $ninFront = isset($data['nin_front'])
+            ? $this->storeSecureImage($data['nin_front'], 'nin_front')
+            : null;
+
+        $ninBack = isset($data['nin_back'])
+            ? $this->storeSecureImage($data['nin_back'], 'nin_back')
+            : null;
+
         $kyc = KycVerification::updateOrCreate(
             ['user_id' => $user->id],
             [
@@ -27,17 +40,14 @@ class KycService
                 'city'  => $data['city'],
                 'zip_code'  => $data['zip_code'],
 
-                'selfie_image' => isset($data['selfie_image'])
-                    ? $this->storeSecureImage($data['selfie_image'], 'selfies')
-                    : null,
+                'selfie_image_url' => $selfie['url'] ?? null,
+                'selfie_image_public_id' => $selfie['public_id'] ?? null,
 
-                'nin_front' => isset($data['nin_front'])
-                    ? $this->storeSecureImage($data['nin_front'], 'nin_front')
-                    : null,
+                'nin_front_url' => $ninFront['url'] ?? null,
+                'nin_front_public_id' => $ninFront['public_id'] ?? null,
 
-                'nin_back' => isset($data['nin_back'])
-                    ? $this->storeSecureImage($data['nin_back'], 'nin_back')
-                    : null,
+                'nin_back_url' => $ninBack['url'] ?? null,
+                'nin_back_public_id' => $ninBack['public_id'] ?? null,
 
                 'status' => 'pending'
             ]
@@ -61,84 +71,60 @@ class KycService
             throw new \Exception('Invalid upload');
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | File Size Limit (2MB)
-        |--------------------------------------------------------------------------
-        */
+        // Size limit (2MB)
         $maxSize = 2 * 1024 * 1024;
-
         if ($file->getSize() > $maxSize) {
             throw new \Exception('File too large');
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | Extension Whitelist
-        |--------------------------------------------------------------------------
-        */
+        // Extension whitelist
         $allowedExtensions = ['jpg','jpeg','png','webp'];
-
         $extension = strtolower($file->getClientOriginalExtension());
 
         if (!in_array($extension, $allowedExtensions)) {
             throw new \Exception('Invalid file extension');
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | MIME Type Validation
-        |--------------------------------------------------------------------------
-        */
+        // MIME validation
         $allowedMime = [
             'image/jpeg',
             'image/png',
             'image/webp'
         ];
 
-        $mime = $file->getMimeType();
-
-        if (!in_array($mime, $allowedMime)) {
+        if (!in_array($file->getMimeType(), $allowedMime)) {
             throw new \Exception('Invalid MIME type');
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | Real Image Validation (Prevents fake images)
-        |--------------------------------------------------------------------------
-        */
+        // Real image validation
         $imageInfo = @getimagesize($file->getRealPath());
-
         if ($imageInfo === false) {
             throw new \Exception('File is not a valid image');
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | Dimension Limit (Prevent image bombs)
-        |--------------------------------------------------------------------------
-        */
-        $maxWidth = 5000;
-        $maxHeight = 5000;
-
-        if ($imageInfo[0] > $maxWidth || $imageInfo[1] > $maxHeight) {
+        // Dimension limit
+        if ($imageInfo[0] > 5000 || $imageInfo[1] > 5000) {
             throw new \Exception('Image dimensions too large');
         }
 
         /*
         |--------------------------------------------------------------------------
-        | Generate Secure Filename
+        | Upload to Cloudinary
         |--------------------------------------------------------------------------
         */
-        $filename = Str::uuid()->toString() . '.' . $extension;
+        $result = Cloudinary::upload($file->getRealPath(), [
+            'folder' => 'kyc/' . $folder,
+            'type' => 'private',
+            'resource_type' => 'image',
+            'transformation' => [
+                'quality' => 'auto',
+                'fetch_format' => 'auto'
+            ]
+        ]);
 
-        /*
-        |--------------------------------------------------------------------------
-        | Store in PRIVATE disk
-        |--------------------------------------------------------------------------
-        */
-        $path = $file->storeAs("kyc/{$folder}", $filename, 'private');
-
-        return $path;
+        return [
+            'url' => $result->getSecurePath(),
+            'public_id' => $result->getPublicId(),
+        ];
     }
 }

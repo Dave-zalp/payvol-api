@@ -12,9 +12,6 @@ class KycVerification extends Model
         'user_id',
         'bvn_number',
         'nin_number',
-        'selfie_image',
-        'nin_front',
-        'nin_back',
         'nin_info',
         'bvn_info',
         'bvn_status',
@@ -27,6 +24,12 @@ class KycVerification extends Model
         'state',
         'city',
         'zip_code',
+        'selfie_image_url',
+        'selfie_image_public_id',
+        'nin_front_url',
+        'nin_front_public_id',
+        'nin_back_url',
+        'nin_back_public_id',
     ];
 
     protected $casts = [

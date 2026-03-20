@@ -83,6 +83,12 @@ jobs:
             echo "🔄 Running migrations..."
             php artisan migrate
 
+            echo "Install Cloudinary SDK"
+            composer require cloudinary-labs/cloudinary-laravel
+
+            echo "Invoke the cloudinary install command"
+            php artisan cloudinary:install
+
             # echo "make private storage app"
             # mkdir storage/app/private
 
