@@ -33,7 +33,7 @@ class KycVerification extends Model
         'nin_info' => 'array',
         'bvn_info' => 'array',
         'verified_at' => 'datetime',
-        'date_of_birth' => 'date',
+        'date_of_birth' => 'string',
     ];
 
     public function user()
