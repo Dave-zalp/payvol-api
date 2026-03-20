@@ -76,8 +76,8 @@ jobs:
             echo "🗄️ Running migrations..."
             php artisan migrate --force
 
-            echo "☁️ Installing Cloudinary (if not already configured)..."
-            php artisan cloudinary:install || true
+            # echo "☁️ Installing Cloudinary (if not already configured)..."
+            # php artisan cloudinary:install || true
 
             echo "🗑️ Clearing caches..."
             php artisan optimize:clear

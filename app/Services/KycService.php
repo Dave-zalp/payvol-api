@@ -71,13 +71,11 @@ class KycService
             throw new \Exception('Invalid upload');
         }
 
-        // Size limit (2MB)
         $maxSize = 2 * 1024 * 1024;
         if ($file->getSize() > $maxSize) {
             throw new \Exception('File too large');
         }
 
-        // Extension whitelist
         $allowedExtensions = ['jpg','jpeg','png','webp'];
         $extension = strtolower($file->getClientOriginalExtension());
 
@@ -85,7 +83,6 @@ class KycService
             throw new \Exception('Invalid file extension');
         }
 
-        // MIME validation
         $allowedMime = [
             'image/jpeg',
             'image/png',
@@ -96,23 +93,21 @@ class KycService
             throw new \Exception('Invalid MIME type');
         }
 
-        // Real image validation
         $imageInfo = @getimagesize($file->getRealPath());
         if ($imageInfo === false) {
             throw new \Exception('File is not a valid image');
         }
 
-        // Dimension limit
         if ($imageInfo[0] > 5000 || $imageInfo[1] > 5000) {
             throw new \Exception('Image dimensions too large');
         }
 
         /*
         |--------------------------------------------------------------------------
-        | Upload to Cloudinary
+        | Upload to Cloudinary (FIXED)
         |--------------------------------------------------------------------------
         */
-        $result = Cloudinary::upload($file->getRealPath(), [
+        $result = Cloudinary::uploadApi()->upload($file->getRealPath(), [
             'folder' => 'kyc/' . $folder,
             'type' => 'private',
             'resource_type' => 'image',
@@ -123,8 +118,8 @@ class KycService
         ]);
 
         return [
-            'url' => $result->getSecurePath(),
-            'public_id' => $result->getPublicId(),
+            'url' => $result['secure_url'],
+            'public_id' => $result['public_id'],
         ];
     }
 }
