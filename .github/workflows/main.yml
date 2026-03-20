@@ -34,7 +34,7 @@ jobs:
 
       - name: Clean unnecessary files
         run: |
-          rm -rf .git .github tests node_modules
+          rm -rf .git .github tests node_modules vendor
           rm -rf storage/framework/cache/* storage/framework/sessions/* storage/framework/views/* storage/logs/*
           rm -f .env .env.example
 
