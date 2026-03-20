@@ -11,7 +11,7 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Cloudinary Configuration
+    | Cloudinary Configuration.
     |--------------------------------------------------------------------------
     |
     | An HTTP or HTTPS URL to notify your application (a webhook) when the process of uploads, deletes, and any API
