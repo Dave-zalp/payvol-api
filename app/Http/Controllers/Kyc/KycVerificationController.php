@@ -14,7 +14,7 @@ class KycVerificationController extends Controller
 
     public function submit(Request $request, KycService $kycService)
     {
-        $request->validate([
+       $validated = $request->validate([
             'bvn_number' => 'nullable|digits:11',
             'nin_number' => 'nullable|digits:11',
             'selfie_image' => 'nullable|image|max:2048',
@@ -45,7 +45,7 @@ class KycVerificationController extends Controller
             ], 409);
         }
 
-        $kyc = $kycService->submitKyc($user, $request->validated());
+        $kyc = $kycService->submitKyc($user, $validated);
 
         return response()->json([
             'message' => 'KYC Verification in progress.',
