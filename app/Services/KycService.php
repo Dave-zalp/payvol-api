@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Jobs\CreateStrowalletCustomerJob;
 use App\Jobs\Kyc\FetchBvnDetailsJob;
 use App\Jobs\Kyc\FetchNinDetailsJob;
 use App\Jobs\Kyc\VerifyBvnJob;
@@ -43,8 +44,9 @@ class KycService
         );
 
         Bus::chain([
-            new VerifyBvnJob($kyc->id),
-            new VerifyNinJob($kyc->id),
+            new VerifyBvnJob($kyc->id),  // Verify BVN Job
+            new VerifyNinJob($kyc->id),  // Verify NIN Job
+            new CreateStrowalletCustomerJob($user), // Create Customer Job
            // new FetchBvnDetailsJob($kyc->id),  // Doesn't work cos feature is not allowed
           //  new FetchNinDetailsJob($kyc->id),   // Doesn't work cos feature is not allowed
         ])->dispatch();

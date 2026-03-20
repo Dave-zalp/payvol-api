@@ -21,16 +21,19 @@ class KycVerification extends Model
         'nin_status',
         'status',
         'verified_at',
-        'rejection_reason'
-
+        'rejection_reason',
+        'date_of_birth',
+        'home_address',
+        'state',
+        'city',
+        'zip_code',
     ];
 
     protected $casts = [
-
         'nin_info' => 'array',
         'bvn_info' => 'array',
-        'verified_at' => 'datetime'
-
+        'verified_at' => 'datetime',
+        'date_of_birth' => 'date',
     ];
 
     public function user()

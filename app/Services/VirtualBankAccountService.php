@@ -69,7 +69,7 @@ class VirtualBankAccountService
                 ]
             );
 
-            // Send a dispatch mail that the account was created
+            // TODO Send a dispatch mail that the account was created
 
         });
 

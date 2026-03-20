@@ -54,4 +54,14 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function strowalletCustomer()
+    {
+        return $this->hasOne(StrowalletCustomer::class);
+    }
+
+    public function kyc()
+    {
+        return $this->hasOne(KycVerification::class);
+    }
 }

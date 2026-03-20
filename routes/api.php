@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegistrationController;
 use App\Http\Controllers\Kyc\KycVerificationController;
 use App\Http\Controllers\VirtualBank\CrudController;
+use App\Http\Controllers\VirtualCard\CardController;
 use App\Http\Controllers\WalletController;
 use App\Http\Controllers\WebhookController;
 use Illuminate\Http\Request;
@@ -36,10 +37,15 @@ Route::prefix('auth')->group(function () {
         Route::middleware(['kyc.check'])->group(function () {
             Route::get('/kyc/status', [KycVerificationController::class, 'status']);
 
-            #naira
+            # naira
             Route::prefix('naira')->group(function () {
                 Route::post('/virtualbank/create', [CrudController::class, 'create']);
                 Route::get('/virtualbank/get', [CrudController::class, 'show']);
+            });
+
+            # USD
+            Route::prefix('USD')->group(function () {
+                Route::post('/virtualcard/create', [CardController::class, 'create']);
             });
 
     });

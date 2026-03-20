@@ -238,4 +238,52 @@ class StrowalletService
             throw $e;
         }
     }
+
+    public function createCustomer(array $payload): array
+    {
+        $endpoint = $this->baseUrl . '/bitvcard/create-user/';
+
+        Log::info('Strowallet Create Customer Request', [
+            'endpoint' => $endpoint,
+            'payload'  => $payload
+        ]);
+
+        $response = Http::timeout(30)->post($endpoint, $payload);
+
+        $body = $response->json();
+
+        Log::info('Strowallet Create Customer Response', [
+            'status' => $response->status(),
+            'body'   => $body
+        ]);
+
+        return is_array($body) ? $body : [
+            'success' => false,
+            'message' => 'Invalid response from provider'
+        ];
+    }
+
+    public function createCard(array $payload): array
+    {
+        $endpoint = $this->baseUrl . '/bitvcard/create-card/';
+
+        Log::info('Strowallet Create Card Request', [
+            'endpoint' => $endpoint,
+            'payload'  => $payload
+        ]);
+
+        $response = Http::timeout(30)->post($endpoint, $payload);
+
+        $body = $response->json();
+
+        Log::info('Strowallet Create Card Response', [
+            'status' => $response->status(),
+            'body'   => $body
+        ]);
+
+        return is_array($body) ? $body : [
+            'success' => false,
+            'message' => 'Invalid response from provider'
+        ];
+    }
 }
