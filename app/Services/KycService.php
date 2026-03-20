@@ -21,7 +21,7 @@ class KycService
             [
                 'bvn_number' => $data['bvn_number'] ?? null,
                 'nin_number' => $data['nin_number'] ?? null,
-                'dob' => $data['dob'] ?? null,
+                'date_of_birth' => $data['dob'] ?? null,
                 'home_address'  => $data['home_address'],
                 'state'  => $data['state'],
                 'city'  => $data['city'],

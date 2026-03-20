@@ -20,7 +20,7 @@ class KycVerificationController extends Controller
             'selfie_image' => 'nullable|image|max:2048',
             'nin_front' => 'nullable|image|max:2048',
             'nin_back' => 'nullable|image|max:2048',
-            'dob' => 'nullable|date',
+            'dob' => 'nullable',
             'home_address'  => 'nullable|string|max:255',
             'state'         => 'nullable|string|max:100',
             'city'          => 'nullable|string|max:100',
