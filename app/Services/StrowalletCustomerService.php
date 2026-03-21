@@ -3,10 +3,11 @@
 namespace App\Services;
 
 use App\Integrations\Strowallet\StrowalletService;
+use App\Models\StrowalletCustomer;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Models\StrowalletCustomer;
 
 class StrowalletCustomerService
 {
@@ -47,7 +48,9 @@ class StrowalletCustomerService
                 'idNumber'     => $kyc->nin_number,
                 'customerEmail'=> $user->email,
                 'phoneNumber'  => '234' . ltrim($user->phone, '0'),
-                'dateOfBirth'  => optional($kyc->date_of_birth)?->format('m/d/Y'),
+                'dateOfBirth' => $kyc->date_of_birth
+                                ? Carbon::createFromFormat('d-m-Y', $kyc->date_of_birth)->format('m/d/Y')
+                                : null,
                 'idImage'      => $kyc->nin_front_url,
                 'userPhoto'    => $kyc->selfie_image_url,
                 'line1'        => $kyc->home_address,
