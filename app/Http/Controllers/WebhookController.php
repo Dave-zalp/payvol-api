@@ -14,8 +14,13 @@ class WebhookController extends Controller
         Log::info($request);
     }
 
-    public function virtualcard (Request $request){
-        dd($request);
-        Log::info($request);
+    public function virtualcard(Request $request)
+    {
+        Log::info('Virtual Card Webhook Received', [
+            'headers' => $request->headers->all(),
+            'payload' => $request->all(),
+        ]);
+
+        return $this->success('Webhook received.');
     }
 }
