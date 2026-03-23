@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Services\KycService;
 use Illuminate\Http\Request;
 use App\Models\KycVerification;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 class KycVerificationController extends Controller
@@ -42,8 +41,10 @@ class KycVerificationController extends Controller
         return $this->success('KYC verification in progress.', ['status' => $kyc->status]);
     }
 
-    public function status()
+    public function status(Request $request)
     {
+
+        $user = $request->user();
         $kyc = KycVerification::where('user_id', $user->id)->first();
 
         if (!$kyc) {
