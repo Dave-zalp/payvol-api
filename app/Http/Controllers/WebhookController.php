@@ -13,4 +13,9 @@ class WebhookController extends Controller
         dd($request);
         Log::info($request);
     }
+
+    public function virtualcard (Request $request){
+        dd($request);
+        Log::info($request);
+    }
 }

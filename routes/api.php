@@ -15,6 +15,7 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::post('/virtualbank/strollwallet/webhook', [WebhookController::class, 'virtualbank']);
+Route::post('/virtualcard/strollwallet/webhook', [WebhookController::class, 'virtualcard']);
 
 Route::prefix('auth')->group(function () {
     Route::post('/register/step-1', [RegistrationController::class, 'stepOne']);
