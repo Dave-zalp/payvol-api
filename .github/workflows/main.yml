@@ -74,7 +74,7 @@ jobs:
             chmod -R 775 storage bootstrap/cache
 
             echo "🗄️ Running migrations..."
-            php artisan migrate --force
+            php artisan migrate
 
             # echo "☁️ Installing Cloudinary (if not already configured)..."
             # php artisan cloudinary:install || true

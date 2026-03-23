@@ -149,11 +149,11 @@ class CardController extends Controller
                 return $this->error('You do not have a Strowallet customer profile.', 422);
             }
 
-            $usdWallet = $user->wallets()->where('currency', 'USD')->where('is_active', true)->first();
+            // $usdWallet = $user->wallets()->where('currency', 'USD')->where('is_active', true)->first();
 
-            if (!$usdWallet) {
-                return $this->error('You do not have an active USD wallet.', 422);
-            }
+            // if (!$usdWallet) {
+            //     return $this->error('You do not have an active USD wallet.', 422);
+            // }
 
             if (VirtualCard::where('user_id', $user->id)->where('card_status', 'pending')->exists()) {
                 return $this->error('Card creation already in progress.', 409);
