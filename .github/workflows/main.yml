@@ -62,8 +62,8 @@ jobs:
             echo "📂 Changing to deployment directory..."
             cd ${{ secrets.PAYVOL_DEPLOY_PATH }}
 
-            echo "📦 Installing dependencies..."
-            composer install --no-dev --optimize-autoloader
+            # echo "📦 Installing dependencies..."
+            # composer install --no-dev --optimize-autoloader
 
             echo "📁 Setting up storage..."
             mkdir -p storage/framework/{sessions,views,cache}

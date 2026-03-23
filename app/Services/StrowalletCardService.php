@@ -24,7 +24,7 @@ class StrowalletCardService
             'name_on_card'  => $customer->first_name . ' ' . $customer->last_name,
             'card_type'     => 'visa',
             'public_key'    => config('services.strowallet.public_key'),
-            'amount'        => (string) 0,
+            'amount'        => (string) 3,
             'customerEmail' => $customer->customer_email,
             'mode'          => 'sandbox', // remove in production
         ];
