@@ -27,7 +27,9 @@ class KycVerificationController extends Controller
             'zip_code'     => 'nullable|string|max:20',
         ]);
 
-        $existing = KycVerification::where('user_id', auth()->id())
+        $user = $request->user();
+
+        $existing = KycVerification::where('user_id', $user->id)
             ->where('status', 'pending')
             ->first();
 
@@ -42,7 +44,7 @@ class KycVerificationController extends Controller
 
     public function status()
     {
-        $kyc = KycVerification::where('user_id', Auth::id())->first();
+        $kyc = KycVerification::where('user_id', $user->id)->first();
 
         if (!$kyc) {
             return $this->error('KYC not submitted.', 404);
