@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 
 class Wallet extends Model
 {
+    use HasUuids;
     protected $fillable = [
         'user_id', 'currency', 'balance',
         'ledger_balance', 'is_active'

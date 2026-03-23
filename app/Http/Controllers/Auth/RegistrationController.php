@@ -13,134 +13,123 @@ use Illuminate\Support\Facades\Hash;
 
 class RegistrationController extends Controller
 {
-    //
     public function stepOne(Request $request)
     {
         $request->validate([
-            'country' => 'required|string',
-            'first_name' => 'required|string',
-            'middle_name' => 'nullable|string',
-            'surname' => 'required|string',
-            'gender' => 'required|in:male,female,other',
-            'email' => 'required|email|unique:users,email',
-            'phone' => 'required|string|unique:users,phone',
-            'referral_code' => 'nullable|string'
+            'country'       => 'required|string',
+            'first_name'    => 'required|string',
+            'middle_name'   => 'nullable|string',
+            'surname'       => 'required|string',
+            'gender'        => 'required|in:male,female,other',
+            'email'         => 'required|email|unique:users,email',
+            'phone'         => 'required|string|unique:users,phone',
+            'referral_code' => 'nullable|string',
         ]);
 
-        $session = RegistrationSession::updateOrCreate(
+        RegistrationSession::updateOrCreate(
             ['email' => $request->email],
             [
-                'step_data' => $request->only([
-                    'country',
-                    'first_name',
-                    'middle_name',
-                    'surname',
-                    'gender',
-                    'phone',
-                    'referral_code'
+                'step_data'    => $request->only([
+                    'country', 'first_name', 'middle_name',
+                    'surname', 'gender', 'phone', 'referral_code',
                 ]),
-                'current_step' => 2
+                'current_step' => 2,
             ]
         );
 
-        return response()->json(['message' => 'Proceed to Step 2']);
+        return $this->success('Proceed to Step 2.');
     }
 
     public function stepTwo(Request $request, Otpservice $otpService)
     {
         $request->validate([
-            'email' => 'required|email',
-            'password' => 'required|min:8|confirmed'
+            'email'    => 'required|email',
+            'password' => 'required|min:8|confirmed',
         ]);
 
-        $session = RegistrationSession::where('email', $request->email)->where('current_step', 2)->firstOrFail();
+        $session = RegistrationSession::where('email', $request->email)
+            ->where('current_step', 2)
+            ->firstOrFail();
 
-        // Generate OTP via reusable service
-       $otp = $otpService->generate(
+        $otp = $otpService->generate(
             identifier: $session->email,
             type: 'registration',
-            userId: null // user not created yet
+            userId: null
         );
 
-        // Send Otp Job
         SendRegistrationOtpJob::dispatch($session->email, $otp);
 
         $session->update([
-            'password' => Hash::make($request->password),
-            'otp' => Hash::make($otp), // Hash OTP!
+            'password'       => Hash::make($request->password),
+            'otp'            => Hash::make($otp),
             'otp_expires_at' => now()->addMinutes(5),
-            'current_step' => 3
+            'current_step'   => 3,
         ]);
 
-
-
-        return response()->json([
-            'message' => 'Password saved. OTP sent to email.'
-        ]);
+        return $this->success('Password saved. OTP sent to email.');
     }
 
     public function verifyOtp(Request $request, Otpservice $otpService)
     {
         $request->validate([
             'email' => 'required|email',
-            'otp' => 'required|digits:6'
+            'otp'   => 'required|digits:6',
         ]);
 
-        $session = RegistrationSession::where('email', $request->email)->where('current_step', 3)->firstOrFail();
+        $session = RegistrationSession::where('email', $request->email)
+            ->where('current_step', 3)
+            ->firstOrFail();
 
         try {
 
             $otpService->verify(
-                $request->email,   // identifier
-                'registration',    // OTP type
-                $request->otp      // user input OTP
+                $request->email,
+                'registration',
+                $request->otp
             );
 
-            $session->update([
-                'current_step' => 4
-            ]);
+            $session->update(['current_step' => 4]);
 
-            return response()->json([
-                'message' => 'OTP verified successfully'
-            ]);
+            return $this->success('OTP verified successfully.');
 
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
 
-            return response()->json([
-                'error' => $e->getMessage()
-            ], 400);
-
+            return $this->error($e->getMessage(), 400);
         }
     }
 
     public function stepFour(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
-            'purpose' => 'required|string'
+            'email'   => 'required|email',
+            'purpose' => 'required|string',
         ]);
 
-        $session = RegistrationSession::where('email', $request->email)->where('current_step', 4)->firstOrFail();
+        $session = RegistrationSession::where('email', $request->email)
+            ->where('current_step', 4)
+            ->firstOrFail();
 
-        $data = $session->step_data;
-        $data['purpose'] = $request->purpose;
+        $data             = $session->step_data;
+        $data['purpose']  = $request->purpose;
 
         $session->update([
-            'step_data' => $data,
-            'current_step' => 5
+            'step_data'    => $data,
+            'current_step' => 5,
         ]);
 
-        return response()->json(['message' => 'Proceed to create PIN']);
+        return $this->success('Proceed to create PIN.');
     }
 
     public function stepFive(Request $request)
     {
         $request->validate([
             'email' => 'required|email',
-            'pin' => 'required|digits:4|confirmed'
+            'pin'   => 'required|digits:4|confirmed',
         ]);
 
-        $session = RegistrationSession::where('email', $request->email)->where('current_step', 5)->firstOrFail();
+        $session = RegistrationSession::where('email', $request->email)
+            ->where('current_step', 5)
+            ->firstOrFail();
 
         DB::beginTransaction();
 
@@ -149,17 +138,17 @@ class RegistrationController extends Controller
             $data = $session->step_data;
 
             $user = User::create([
-                'country' => $data['country'],
-                'first_name' => $data['first_name'],
-                'middle_name' => $data['middle_name'] ?? null,
-                'surname' => $data['surname'],
-                'gender' => $data['gender'],
-                'email' => $session->email,
-                'phone' => $data['phone'],
-                'password' => $session->password,
+                'country'         => $data['country'],
+                'first_name'      => $data['first_name'],
+                'middle_name'     => $data['middle_name'] ?? null,
+                'surname'         => $data['surname'],
+                'gender'          => $data['gender'],
+                'email'           => $session->email,
+                'phone'           => $data['phone'],
+                'password'        => $session->password,
                 'transaction_pin' => Hash::make($request->pin),
-                'referral_code' => $data['referral_code'] ?? null,
-                'email_verified' => true,
+                'referral_code'   => $data['referral_code'] ?? null,
+                'email_verified'  => true,
             ]);
 
             $session->delete();
@@ -168,16 +157,13 @@ class RegistrationController extends Controller
 
             $token = $user->createToken(name: $request->device_name)->plainTextToken;
 
-            return response()->json([
-                'message' => 'Account created successfully',
-                'token' => $token
-            ]);
+            return $this->success('Account created successfully.', ['token' => $token], 201);
 
         } catch (\Exception $e) {
+
             DB::rollBack();
-            return response()->json([
-            'error' => $e->getMessage()
-        ], 500);
+
+            return $this->error($e->getMessage(), 500);
         }
     }
 }

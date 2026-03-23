@@ -13,7 +13,7 @@ return new class extends Migration
     {
         //
         Schema::create('registration_sessions', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('email')->unique();
             $table->json('step_data')->nullable();
             $table->string('password')->nullable();
@@ -30,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        //
+        Schema::dropIfExists('registration_sessions');
     }
 };

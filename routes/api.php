@@ -45,7 +45,12 @@ Route::prefix('auth')->group(function () {
 
             # USD
             Route::prefix('USD')->group(function () {
-                Route::post('/virtualcard/create', [CardController::class, 'create']);
+                Route::post('/virtualcard/create',                          [CardController::class, 'create']);
+                Route::get('/virtualcard',                                  [CardController::class, 'index']);
+                Route::get('/virtualcard/{id}',                        [CardController::class, 'show']);
+                Route::post('/virtualcard/{id}/fund',                  [CardController::class, 'fund']);
+                Route::get('/virtualcard/{id}/transactions',           [CardController::class, 'transactions']);
+                Route::post('/virtualcard/{id}/{action}',              [CardController::class, 'toggleStatus'])->whereIn('action', ['freeze', 'unfreeze']);
             });
 
     });

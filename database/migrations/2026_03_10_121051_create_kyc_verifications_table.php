@@ -10,9 +10,9 @@ return new class extends Migration
     {
         Schema::create('kyc_verifications', function (Blueprint $table) {
 
-            $table->id();
+            $table->uuid('id')->primary();
 
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignUuid('user_id')->constrained()->cascadeOnDelete();
 
             $table->string('bvn_number')->nullable();
             $table->string('nin_number')->nullable();

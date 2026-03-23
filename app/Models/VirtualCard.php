@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 
 class VirtualCard extends Model
 {
+    use HasUuids;
     protected $fillable = [
         'user_id',
         'card_id',
@@ -38,6 +40,16 @@ class VirtualCard extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function cardTransactions()
+    {
+        return $this->hasMany(CardTransaction::class);
+    }
+
+    public function transactions()
+    {
+        return $this->morphMany(Transaction::class, 'transactable');
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Helpers (Very Useful)
@@ -52,5 +64,10 @@ class VirtualCard extends Model
     public function isPending(): bool
     {
         return $this->card_status === 'pending';
+    }
+
+    public function isFrozen(): bool
+    {
+        return $this->card_status === 'frozen';
     }
 }

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Models\Wallet;
 use Illuminate\Http\Request;
 
@@ -10,8 +9,7 @@ class WalletController extends Controller
 {
     public function index(Request $request)
     {
-        $user = $request->user();
-
+        $user       = $request->user();
         $currencies = ['NGN', 'USD', 'USDT'];
 
         $query = Wallet::where('user_id', $user->id)
@@ -40,9 +38,9 @@ class WalletController extends Controller
                 ];
             });
 
-        return response()->json([
-            'status' => true,
-            'data'   => $request->has('currency') ? $data->first() : $data
-        ], 200);
+        return $this->success(
+            'Wallets retrieved successfully.',
+            $request->has('currency') ? $data->first() : $data
+        );
     }
 }

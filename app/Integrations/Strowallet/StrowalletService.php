@@ -286,4 +286,118 @@ class StrowalletService
             'message' => 'Invalid response from provider'
         ];
     }
+
+    public function fetchCardDetail(string $cardId): array
+    {
+        $endpoint = $this->baseUrl . '/bitvcard/fetch-card-detail/';
+
+        $payload = [
+            'card_id'    => $cardId,
+            'public_key' => $this->publicKey,
+            'mode'       => $this->mode,
+        ];
+
+        Log::info('Strowallet Fetch Card Detail Request', [
+            'endpoint' => $endpoint,
+            'payload'  => $payload
+        ]);
+
+        $response = Http::timeout(30)->post($endpoint, $payload);
+
+        $body = $response->json();
+
+        Log::info('Strowallet Fetch Card Detail Response', [
+            'status' => $response->status(),
+            'body'   => $body
+        ]);
+
+        return is_array($body) ? $body : [
+            'success' => false,
+            'message' => 'Invalid response from provider'
+        ];
+    }
+
+    public function updateCardStatus(string $cardId, string $action): array
+    {
+        $endpoint = $this->baseUrl . '/bitvcard/action/status/';
+
+        $params = [
+            'action'     => $action,
+            'card_id'    => $cardId,
+            'public_key' => $this->publicKey,
+        ];
+
+        Log::info('Strowallet Update Card Status Request', [
+            'endpoint' => $endpoint,
+            'params'   => $params,
+        ]);
+
+        $response = Http::timeout(30)->withQueryParameters($params)->post($endpoint);
+
+        $body = $response->json();
+
+        Log::info('Strowallet Update Card Status Response', [
+            'status' => $response->status(),
+            'body'   => $body,
+        ]);
+
+        return is_array($body) ? $body : [
+            'success' => false,
+            'message' => 'Invalid response from provider'
+        ];
+    }
+
+    public function fetchCardTransactions(string $cardId): array
+    {
+        $endpoint = $this->baseUrl . '/bitvcard/card-transactions/';
+
+        $payload = [
+            'card_id'    => $cardId,
+            'public_key' => $this->publicKey,
+            'mode'       => $this->mode,
+        ];
+
+        Log::info('Strowallet Fetch Card Transactions Request', [
+            'endpoint' => $endpoint,
+            'payload'  => $payload
+        ]);
+
+        $response = Http::timeout(30)->post($endpoint, $payload);
+
+        $body = $response->json();
+
+        Log::info('Strowallet Fetch Card Transactions Response', [
+            'status' => $response->status(),
+            'body'   => $body
+        ]);
+
+        return is_array($body) ? $body : [
+            'success' => false,
+            'message' => 'Invalid response from provider'
+        ];
+    }
+
+    public function fundCard(array $payload): array
+    {
+        $endpoint = $this->baseUrl . '/bitvcard/fund-card/';
+
+        Log::info('Strowallet Fund Card Request', [
+            'endpoint' => $endpoint,
+            'payload'  => $payload
+        ]);
+
+        $response = Http::timeout(30)->post($endpoint, $payload);
+
+        $body = $response->json();
+
+        Log::info('Strowallet Fund Card Response', [
+            'status' => $response->status(),
+            'body'   => $body
+        ]);
+
+        return is_array($body) ? $body : [
+            'success' => false,
+            'message' => 'Invalid response from provider'
+        ];
+    }
 }

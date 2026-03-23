@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('virtual_accounts', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->uuid('id')->primary();
+            $table->foreignUuid('user_id')->constrained()->cascadeOnDelete();
             $table->string('account_name');        // e.g., "David Opara"
             $table->string('account_number')->unique();
             $table->string('bank_name')->nullable();

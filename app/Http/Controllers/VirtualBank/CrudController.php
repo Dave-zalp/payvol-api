@@ -25,67 +25,50 @@ class CrudController extends Controller
             $user = $request->user();
 
             if (VirtualAccount::where('user_id', $user->id)->exists()) {
-                return;
+                return $this->error('Virtual account already exists.', 409);
             }
 
-            // Dispatch queue job
             CreateVirtualAccountJob::dispatch($user);
 
-            return response()->json([
-                'status'  => true,
-                'message' => 'Virtual account creation is being processed.',
-            ], 202);
+            return $this->success('Virtual account creation is being processed.', null, 202);
 
         } catch (\Throwable $e) {
 
-            // Log the real error for debugging
             Log::error('Virtual Account Creation Error', [
                 'message' => $e->getMessage(),
                 'file'    => $e->getFile(),
                 'line'    => $e->getLine(),
             ]);
 
-            return response()->json([
-                'status'  => false,
-                'message' => 'An unexpected error occurred. Please try again later.'
-            ], 500);
+            return $this->error('An unexpected error occurred. Please try again later.', 500);
         }
     }
 
     public function show(Request $request)
     {
         try {
-            $user = $request->user();
 
-            $virtualAccount = VirtualAccount::where('user_id', $user->id)->first();
+            $virtualAccount = VirtualAccount::where('user_id', $request->user()->id)->first();
 
             if (!$virtualAccount) {
-                return response()->json([
-                    'status'  => false,
-                    'message' => 'Virtual account not found.',
-                ], 404);
+                return $this->error('Virtual account not found.', 404);
             }
 
-            return response()->json([
-                'status' => true,
-                'data'   => [
-                    'account_name'   => $virtualAccount->account_name,
-                    'account_number' => $virtualAccount->account_number,
-                    'bank_name'      => $virtualAccount->bank_name,
-                    'currency'       => $virtualAccount->currency,
-                ]
-            ], 200);
+            return $this->success('Virtual account retrieved successfully.', [
+                'account_name'   => $virtualAccount->account_name,
+                'account_number' => $virtualAccount->account_number,
+                'bank_name'      => $virtualAccount->bank_name,
+                'currency'       => $virtualAccount->currency,
+            ]);
 
         } catch (\Throwable $e) {
-            \Log::error('Fetch Virtual Account Error', [
+
+            Log::error('Fetch Virtual Account Error', [
                 'user_id' => $request->user()?->id,
                 'message' => $e->getMessage(),
             ]);
 
-            return response()->json([
-                'status'  => false,
-                'message' => 'Unable to fetch virtual account.'
-            ], 500);
+            return $this->error('Unable to fetch virtual account.', 500);
         }
     }
 }

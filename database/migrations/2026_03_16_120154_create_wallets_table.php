@@ -9,8 +9,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('wallets', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->uuid('id')->primary();
+            $table->foreignUuid('user_id')->constrained()->cascadeOnDelete();
             $table->enum('currency', ['NGN', 'USD', 'USDT'])->default('NGN');
             $table->decimal('balance', 20, 2)->default(0);
             $table->decimal('ledger_balance', 20, 2)->default(0);
