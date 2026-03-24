@@ -6,6 +6,7 @@ use App\Integrations\Strowallet\StrowalletService;
 use App\Models\CardTransaction;
 use App\Models\Transaction;
 use App\Models\VirtualCard;
+use App\Models\Wallet;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -13,59 +14,116 @@ use Illuminate\Support\Facades\Log;
 class StrowalletCardService
 {
     public function __construct(
-        protected StrowalletService $integration
+        protected StrowalletService $integration,
+        protected LedgerService $ledger
     ) {}
 
-    public function createCard(User $user)
+    public function createCard(User $user, string $walletId, float $prefundAmount, float $deduction): array
     {
-        $customer = $user->strowalletCustomer;
+        $customer    = $user->strowalletCustomer;
+        $wallet      = Wallet::findOrFail($walletId);
+        $creationFee = 2.00;
+        $serviceFee  = round($prefundAmount * 0.023, 2);
 
-        $payload = [
-            'name_on_card'  => $customer->first_name . ' ' . $customer->last_name,
-            'card_type'     => 'visa',
-            'public_key'    => config('services.strowallet.public_key'),
-            'amount'        => (string) 3,
-            'customerEmail' => $customer->customer_email,
-            'mode'          => 'sandbox', // remove in production
-        ];
-
-        $response = $this->integration->createCard($payload);
-
-        $success = $response['success'] ?? false;
-        $data    = $response['response'] ?? null;
-
-        if (!$success || !$data || empty($data['card_id'])) {
-            Log::warning('Strowallet Card Creation Failed', [
-                'user_id'  => $user->id,
-                'response' => $response
+        // Debit wallet and record pending transaction atomically
+        $platformTx = DB::transaction(function () use ($user, $wallet, $prefundAmount, $creationFee, $serviceFee, $deduction) {
+            $platformTx = Transaction::create([
+                'user_id'        => $user->id,
+                'reference'      => Transaction::generateReference(),
+                'type'           => 'card_creation',
+                'channel'        => 'virtual_card',
+                'amount'         => $prefundAmount,
+                'fee'            => $creationFee + $serviceFee,
+                'currency'       => 'USD',
+                'status'         => 'pending',
+                'description'    => 'Virtual card creation',
+                'balance_before' => (float) $wallet->balance,
+                'balance_after'  => (float) $wallet->balance - $deduction,
+                'metadata'       => [
+                    'wallet_currency' => $wallet->currency,
+                    'wallet_deduction' => $deduction,
+                    'creation_fee'    => $creationFee,
+                    'service_fee'     => $serviceFee,
+                ],
             ]);
 
-            throw new \Exception(
-                is_string($response['message'])
-                    ? $response['message']
-                    : json_encode($response['message'])
+            $this->ledger->debit(
+                $wallet,
+                $deduction,
+                "Card creation — \${$prefundAmount} prefund + \${$creationFee} creation fee + \${$serviceFee} service fee",
+                $platformTx
             );
-        }
 
-        DB::transaction(function () use ($user, $data, $response) {
-
-            VirtualCard::create([
-                'user_id'          => $user->id,
-                'card_id'          => $data['card_id'],
-                'card_user_id'     => $data['card_user_id'] ?? null,
-                'reference'        => $data['reference'] ?? null,
-                'name_on_card'     => $data['name_on_card'],
-                'card_brand'       => $data['card_brand'] ?? null,
-                'card_type'        => $data['card_type'] ?? null,
-                'card_status'      => $data['card_status'] ?? 'pending',
-                'customer_id'      => $data['customer_id'] ?? null,
-                'card_created_at'  => $data['card_created_date'] ?? null,
-                'response'         => $response,
-            ]);
-
+            return $platformTx;
         });
 
-        return $data;
+        try {
+            $payload = [
+                'name_on_card'  => $customer->first_name . ' ' . $customer->last_name,
+                'card_type'     => 'visa',
+                'public_key'    => config('services.strowallet.public_key'),
+                'amount'        => (string) $prefundAmount,
+                'customerEmail' => $customer->customer_email,
+                'mode'          => config('services.strowallet.mode', 'sandbox'),
+            ];
+
+            $response = $this->integration->createCard($payload);
+            $success  = $response['success'] ?? false;
+            $data     = $response['response'] ?? null;
+
+            if (!$success || !$data || empty($data['card_id'])) {
+                $platformTx->markFailed();
+                $this->ledger->credit(
+                    $wallet,
+                    $deduction,
+                    'Refund: card creation failed',
+                    $platformTx
+                );
+
+                Log::warning('Strowallet Card Creation Failed', [
+                    'user_id'  => $user->id,
+                    'response' => $response,
+                ]);
+
+                throw new \Exception(
+                    is_string($response['message'] ?? null)
+                        ? $response['message']
+                        : json_encode($response['message'] ?? 'Failed to create card')
+                );
+            }
+
+            DB::transaction(function () use ($user, $data, $response, $platformTx) {
+                $platformTx->markSuccess();
+
+                VirtualCard::create([
+                    'user_id'         => $user->id,
+                    'card_id'         => $data['card_id'],
+                    'card_user_id'    => $data['card_user_id'] ?? null,
+                    'reference'       => $data['reference'] ?? null,
+                    'name_on_card'    => $data['name_on_card'],
+                    'card_brand'      => $data['card_brand'] ?? null,
+                    'card_type'       => $data['card_type'] ?? null,
+                    'card_status'     => $data['card_status'] ?? 'pending',
+                    'customer_id'     => $data['customer_id'] ?? null,
+                    'card_created_at' => $data['card_created_date'] ?? null,
+                    'response'        => $response,
+                ]);
+            });
+
+            return $data;
+
+        } catch (\Throwable $e) {
+            if ($platformTx->isPending()) {
+                $platformTx->markFailed();
+                $this->ledger->credit(
+                    $wallet,
+                    $deduction,
+                    'Refund: card creation failed',
+                    $platformTx
+                );
+            }
+            throw $e;
+        }
     }
 
     public function toggleCardStatus(User $user, string $id, string $action): array
@@ -116,30 +174,39 @@ class StrowalletCardService
         return VirtualCard::where('user_id', $user->id)->latest()->get();
     }
 
-    public function fundCard(User $user, string $id, float $amount): array
+    public function fundCard(User $user, string $id, float $amount, string $walletId, float $deduction): array
     {
-        $card = VirtualCard::where('user_id', $user->id)
-            ->where('id', $id)
-            ->firstOrFail();
+        $card   = VirtualCard::where('user_id', $user->id)->where('id', $id)->firstOrFail();
+        $wallet = Wallet::findOrFail($walletId);
+        $fee    = round($amount * 0.023, 2);
 
-        if (!$card->isActive()) {
-            throw new \Exception('Card is not active and cannot be funded.');
-        }
-
-        // Create a pending platform transaction before hitting the provider
-        $platformTx = DB::transaction(function () use ($user, $card, $amount) {
-            return Transaction::create([
+        // Debit wallet and create pending platform transaction atomically
+        $platformTx = DB::transaction(function () use ($user, $card, $wallet, $amount, $fee, $deduction) {
+            $platformTx = Transaction::create([
                 'user_id'           => $user->id,
                 'reference'         => Transaction::generateReference(),
                 'type'              => 'card_fund',
                 'channel'           => 'virtual_card',
                 'amount'            => $amount,
+                'fee'               => $fee,
                 'currency'          => 'USD',
                 'status'            => 'pending',
                 'description'       => 'Virtual card funding',
                 'transactable_type' => VirtualCard::class,
                 'transactable_id'   => $card->id,
+                'balance_before'    => (float) $wallet->balance,
+                'balance_after'     => (float) $wallet->balance - $deduction,
+                'metadata'          => ['wallet_currency' => $wallet->currency, 'wallet_deduction' => $deduction],
             ]);
+
+            $this->ledger->debit(
+                $wallet,
+                $deduction,
+                "Card funding — {$amount} USD + {$fee} USD fee",
+                $platformTx
+            );
+
+            return $platformTx;
         });
 
         try {
@@ -155,6 +222,12 @@ class StrowalletCardService
 
             if (!$success) {
                 $platformTx->markFailed();
+                $this->ledger->credit(
+                    $wallet,
+                    $deduction,
+                    'Refund: card funding failed',
+                    $platformTx
+                );
 
                 Log::warning('Strowallet Fund Card Failed', [
                     'user_id'  => $user->id,
@@ -171,35 +244,38 @@ class StrowalletCardService
             $providerData = $response['apiresponse']['data'] ?? [];
 
             DB::transaction(function () use ($user, $card, $platformTx, $providerData, $response) {
-
                 $platformTx->markSuccess();
 
                 CardTransaction::create([
-                    'user_id'        => $user->id,
-                    'virtual_card_id'=> $card->id,
-                    'transaction_id' => $platformTx->id,
-                    'provider_id'    => $providerData['id'] ?? null,
-                    'card_id'        => $card->card_id,
-                    'type'           => $providerData['type'] ?? 'credit',
-                    'method'         => $providerData['method'] ?? 'topup',
-                    'narrative'      => $providerData['narrative'] ?? 'Top-up card',
-                    'amount'         => ($providerData['centAmount'] ?? 0) / 100,
-                    'cent_amount'    => $providerData['centAmount'] ?? 0,
-                    'currency'       => $providerData['currency'] ?? 'usd',
-                    'status'         => $providerData['status'] ?? 'pending',
-                    'reference'      => $providerData['reference'] ?? null,
-                    'transacted_at'  => $providerData['createdAt'] ?? now(),
-                    'metadata'       => $response,
+                    'user_id'         => $user->id,
+                    'virtual_card_id' => $card->id,
+                    'transaction_id'  => $platformTx->id,
+                    'provider_id'     => $providerData['id'] ?? null,
+                    'card_id'         => $card->card_id,
+                    'type'            => $providerData['type'] ?? 'credit',
+                    'method'          => $providerData['method'] ?? 'topup',
+                    'narrative'       => $providerData['narrative'] ?? 'Top-up card',
+                    'amount'          => ($providerData['centAmount'] ?? 0) / 100,
+                    'cent_amount'     => $providerData['centAmount'] ?? 0,
+                    'currency'        => $providerData['currency'] ?? 'usd',
+                    'status'          => $providerData['status'] ?? 'pending',
+                    'reference'       => $providerData['reference'] ?? null,
+                    'transacted_at'   => $providerData['createdAt'] ?? now(),
+                    'metadata'        => $response,
                 ]);
-
             });
 
             return $providerData;
 
         } catch (\Throwable $e) {
-            // Ensure platform tx is marked failed if not already
             if ($platformTx->isPending()) {
                 $platformTx->markFailed();
+                $this->ledger->credit(
+                    $wallet,
+                    $deduction,
+                    'Refund: card funding failed',
+                    $platformTx
+                );
             }
             throw $e;
         }

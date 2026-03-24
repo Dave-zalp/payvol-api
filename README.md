@@ -247,4 +247,5 @@
 * [ ] Update the kyc middleware to check for nin_status and bvn_status
 * [ ] Add card creation fee and percent charge when creating a card and check their balance also
 * [ ] Ensure there are access Bugs in the card feature
-* [ ] Store some of the result from API calls in our db and do not only rely on api calls 
+* [ ] Store some of the result from API calls in our db and do not only rely on api calls
+* [ ] Add a balance method on the wallet model to get balance off transactions

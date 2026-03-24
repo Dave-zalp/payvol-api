@@ -34,6 +34,8 @@ Route::prefix('auth')->group(function () {
         # KYC
         Route::post('/kyc/submit', [KycVerificationController::class, 'submit']);
         Route::get('/wallets', [WalletController::class, 'index']);
+        Route::get('/wallets/transactions', [WalletController::class, 'transactions']);
+        Route::get('/wallets/{currency}/balance', [WalletController::class, 'balance']);
 
         Route::middleware(['kyc.check'])->group(function () {
             Route::get('/kyc/status', [KycVerificationController::class, 'status']);
@@ -51,6 +53,7 @@ Route::prefix('auth')->group(function () {
                 Route::get('/virtualcard/{id}',                        [CardController::class, 'show']);
                 Route::post('/virtualcard/{id}/fund',                  [CardController::class, 'fund']);
                 Route::get('/virtualcard/{id}/transactions',           [CardController::class, 'transactions']);
+                Route::get('/virtualcard/{id}/balance',                [CardController::class, 'cardBalance']);
                 Route::post('/virtualcard/{id}/{action}',              [CardController::class, 'toggleStatus'])->whereIn('action', ['freeze', 'unfreeze']);
             });
 

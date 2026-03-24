@@ -15,18 +15,22 @@ class FundCardJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected $user;
-    protected $id;
+    protected $cardId;
     protected $amount;
+    protected $walletId;
+    protected $deduction;
 
-    public function __construct(User $user, string $id, float $amount)
+    public function __construct(User $user, string $cardId, float $amount, string $walletId, float $deduction)
     {
-        $this->user   = $user;
-        $this->cardId = $id;
-        $this->amount = $amount;
+        $this->user      = $user;
+        $this->cardId    = $cardId;
+        $this->amount    = $amount;
+        $this->walletId  = $walletId;
+        $this->deduction = $deduction;
     }
 
     public function handle(StrowalletCardService $service)
     {
-        $service->fundCard($this->user, $this->cardId, $this->amount);
+        $service->fundCard($this->user, $this->cardId, $this->amount, $this->walletId, $this->deduction);
     }
 }

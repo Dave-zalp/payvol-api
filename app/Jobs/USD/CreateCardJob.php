@@ -15,14 +15,20 @@ class CreateCardJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected $user;
+    protected $walletId;
+    protected $prefundAmount;
+    protected $deduction;
 
-    public function __construct(User $user)
+    public function __construct(User $user, string $walletId, float $prefundAmount, float $deduction)
     {
-        $this->user = $user;
+        $this->user          = $user;
+        $this->walletId      = $walletId;
+        $this->prefundAmount = $prefundAmount;
+        $this->deduction     = $deduction;
     }
 
     public function handle(StrowalletCardService $service)
     {
-        $service->createCard($this->user);
+        $service->createCard($this->user, $this->walletId, $this->prefundAmount, $this->deduction);
     }
 }

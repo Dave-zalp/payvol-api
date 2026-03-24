@@ -27,10 +27,10 @@ class Transaction extends Model
     ];
 
     protected $casts = [
-        'amount'         => 'decimal:2',
-        'fee'            => 'decimal:2',
-        'balance_before' => 'decimal:2',
-        'balance_after'  => 'decimal:2',
+        'amount'         => 'decimal:8',
+        'fee'            => 'decimal:8',
+        'balance_before' => 'decimal:8',
+        'balance_after'  => 'decimal:8',
         'metadata'       => 'array',
     ];
 
@@ -68,6 +68,11 @@ class Transaction extends Model
     public function cardTransactions()
     {
         return $this->hasMany(CardTransaction::class);
+    }
+
+    public function ledgerEntries()
+    {
+        return $this->hasMany(WalletLedgerEntry::class);
     }
 
     /*

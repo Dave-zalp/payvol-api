@@ -76,6 +76,9 @@ jobs:
             echo "🗄️ Running migrations..."
             php artisan migrate
 
+            echo "🗄️ Seed table..."
+            php artisan db:seed
+
             # echo "☁️ Installing Cloudinary (if not already configured)..."
             # php artisan cloudinary:install || true
 

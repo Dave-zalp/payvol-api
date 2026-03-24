@@ -5,8 +5,12 @@ namespace App\Http\Controllers\VirtualCard;
 use App\Http\Controllers\Controller;
 use App\Jobs\USD\CreateCardJob;
 use App\Jobs\USD\FundCardJob;
+use App\Models\CardTransaction;
 use App\Models\VirtualCard;
+use App\Models\Wallet;
+use App\Services\Currency\CurrencyConversionService;
 use App\Services\StrowalletCardService;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -40,7 +44,7 @@ class CardController extends Controller
 
             return $this->success('Card details retrieved successfully.', $cardDetail);
 
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        } catch (ModelNotFoundException $e) {
 
             return $this->error('Card not found.', 404);
 
@@ -56,19 +60,53 @@ class CardController extends Controller
         }
     }
 
-    public function fund(Request $request, string $id, StrowalletCardService $service)
+    public function fund(Request $request, string $id, StrowalletCardService $service, CurrencyConversionService $fx)
     {
         $request->validate([
-            'amount' => ['required', 'numeric', 'min:1'],
+            'amount'    => ['nullable', 'numeric', 'min:1'],
+            'wallet_id' => ['required', 'uuid'],
         ]);
 
         try {
 
-            FundCardJob::dispatch($request->user(), $id, (float) $request->amount);
+            $user = $request->user();
+
+            $card = VirtualCard::where('user_id', $user->id)
+                ->where('id', $id)
+                ->firstOrFail();
+
+            if (!$card->isActive()) {
+                return $this->error('Card is not active and cannot be funded.', 422);
+            }
+
+            $wallet = Wallet::where('id', $request->wallet_id)
+                ->where('user_id', $user->id)
+                ->where('is_active', true)
+                ->first();
+
+            if (!$wallet) {
+                return $this->error('Wallet not found or inactive.', 422);
+            }
+
+            $amount   = (float) ($request->amount ?? 5);
+            $fee      = round($amount * 0.023, 2);
+            $totalUsd = $amount + $fee;
+
+            $deduction = match ($wallet->currency) {
+                'NGN'  => $fx->usdToNgn($totalUsd),
+                'USDT' => $fx->usdToUsdt($totalUsd),
+                default => $totalUsd,
+            };
+
+            if ((float) $wallet->balance < $deduction) {
+                return $this->error('Insufficient wallet balance.', 422);
+            }
+
+            FundCardJob::dispatch($user, $id, $amount, $wallet->id, $deduction);
 
             return $this->success('Card funding in progress.');
 
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        } catch (ModelNotFoundException $e) {
 
             return $this->error('Card not found.', 404);
 
@@ -92,7 +130,7 @@ class CardController extends Controller
 
             return $this->success('Card transactions retrieved successfully.', $transactions);
 
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        } catch (ModelNotFoundException $e) {
 
             return $this->error('Card not found.', 404);
 
@@ -122,7 +160,7 @@ class CardController extends Controller
 
             return $this->success($message);
 
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        } catch (ModelNotFoundException $e) {
 
             return $this->error('Card not found.', 404);
 
@@ -139,8 +177,56 @@ class CardController extends Controller
         }
     }
 
-    public function create(Request $request, StrowalletCardService $service)
+    public function cardBalance(Request $request, string $id)
     {
+        try {
+
+            $card = VirtualCard::where('user_id', $request->user()->id)
+                ->where('id', $id)
+                ->firstOrFail();
+
+            $credits = (float) CardTransaction::where('virtual_card_id', $card->id)
+                ->where('type', 'credit')
+                ->where('status', 'success')
+                ->sum('amount');
+
+            $debits = (float) CardTransaction::where('virtual_card_id', $card->id)
+                ->whereIn('type', ['debit', 'authorization'])
+                ->where('status', 'success')
+                ->sum('amount');
+
+            return $this->success('Card balance retrieved.', [
+                'card_id'       => $card->card_id,
+                'card_status'   => $card->card_status,
+                'currency'      => 'USD',
+                'balance'       => round($credits - $debits, 2),
+                'total_credits' => round($credits, 2),
+                'total_debits'  => round($debits, 2),
+            ]);
+
+        } catch (ModelNotFoundException $e) {
+
+            return $this->error('Card not found.', 404);
+
+        } catch (\Throwable $e) {
+
+            Log::error('Card Balance Error', [
+                'user_id' => $request->user()?->id,
+                'card_id' => $id,
+                'message' => $e->getMessage(),
+            ]);
+
+            return $this->error('Unable to retrieve card balance.', 500);
+        }
+    }
+
+    public function create(Request $request, StrowalletCardService $service, CurrencyConversionService $fx)
+    {
+        $request->validate([
+            'wallet_id' => ['required', 'uuid'],
+            'amount'    => ['nullable', 'numeric', 'min:1'],
+        ]);
+
         try {
 
             $user = $request->user();
@@ -149,19 +235,38 @@ class CardController extends Controller
                 return $this->error('You do not have a Strowallet customer profile.', 422);
             }
 
-            // $usdWallet = $user->wallets()->where('currency', 'USD')->where('is_active', true)->first();
-
-            // if (!$usdWallet) {
-            //     return $this->error('You do not have an active USD wallet.', 422);
-            // }
-
-            if (VirtualCard::where('user_id', $user->id)->where('card_status', 'pending')->exists()) {
-                return $this->error('Card creation already in progress.', 409);
+            if (VirtualCard::where('user_id', $user->id)->whereIn('card_status', ['pending', 'active'])->exists()) {
+                return $this->error('You already have a card or one is being created.', 409);
             }
 
-            // Add a charge check here
+            $wallet = Wallet::where('id', $request->wallet_id)
+                ->where('user_id', $user->id)
+                ->where('is_active', true)
+                ->first();
 
-            CreateCardJob::dispatch($user);
+            if (!$wallet) {
+                return $this->error('You would need to create a bank account', 422);
+            }
+
+            $prefundAmount = (float) ($request->amount ?? 5);
+            $creationFee   = 2.00;
+            $serviceFee    = round($prefundAmount * 0.023, 2);
+            $totalUsd      = $prefundAmount + $creationFee + $serviceFee;
+
+            $deduction = match ($wallet->currency) {
+                'NGN'  => $fx->usdToNgn($totalUsd),
+                'USDT' => $fx->usdToUsdt($totalUsd),
+                default => $totalUsd,
+            };
+
+            if ((float) $wallet->balance < $deduction) {
+                return $this->error(
+                    "Insufficient balance. Total required: \${$totalUsd} USD (prefund \${$prefundAmount} + \$2.00 creation fee + \${$serviceFee} service fee).",
+                    422
+                );
+            }
+
+            CreateCardJob::dispatch($user, $wallet->id, $prefundAmount, $deduction);
 
             return $this->success('Card creation in progress.');
 

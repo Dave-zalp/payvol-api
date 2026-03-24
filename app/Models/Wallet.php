@@ -14,13 +14,18 @@ class Wallet extends Model
     ];
 
     protected $casts = [
-        'balance'        => 'decimal:2',
-        'ledger_balance' => 'decimal:2',
+        'balance'        => 'decimal:8',
+        'ledger_balance' => 'decimal:8',
         'is_active'      => 'boolean',
     ];
 
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function ledgerEntries()
+    {
+        return $this->hasMany(WalletLedgerEntry::class);
     }
 }
