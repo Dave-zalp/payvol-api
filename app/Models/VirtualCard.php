@@ -21,12 +21,29 @@ class VirtualCard extends Model
         'card_created_at',
         'balance',
         'response',
+        // Populated by FetchCardDetailsJob after provisioning
+        'card_number',
+        'last4',
+        'cvv',
+        'expiry',
+        'customer_email',
+        'billing_country',
+        'billing_city',
+        'billing_street',
+        'billing_zip_code',
+        'card_details',
     ];
 
     protected $casts = [
-        'response' => 'array',
+        'response'     => 'array',
+        'card_details' => 'array',
         'card_created_at' => 'date',
-        'balance' => 'decimal:2',
+        'balance'      => 'decimal:2',
+    ];
+
+    protected $hidden = [
+        'card_number',
+        'cvv',
     ];
 
     /*

@@ -88,21 +88,26 @@ class CardController extends Controller
                 return $this->error('Wallet not found or inactive.', 422);
             }
 
-            $amount   = (float) ($request->amount ?? 5);
-            $fee      = round($amount * 0.023, 2);
-            $totalUsd = $amount + $fee;
+            // Amount entered in the wallet's native currency
+            $amount = (float) ($request->amount ?? 5);
 
-            $deduction = match ($wallet->currency) {
-                'NGN'  => $fx->usdToNgn($totalUsd),
-                'USDT' => $fx->usdToUsdt($totalUsd),
-                default => $totalUsd,
+            // Convert to USD — card is always funded in USD
+            $usdAmount = match ($wallet->currency) {
+                'NGN'  => $fx->ngnToUsd($amount),
+                'USDT' => $fx->usdtToUsd($amount),
+                default => $amount,
             };
+
+            // Fee (2.3%) calculated on the wallet-currency amount, then deduct total
+            $fee       = round($amount * 0.023, 2);
+            $deduction = $amount + $fee;
 
             if ((float) $wallet->balance < $deduction) {
                 return $this->error('Insufficient wallet balance.', 422);
             }
 
-            FundCardJob::dispatch($user, $id, $amount, $wallet->id, $deduction);
+            // Job always receives USD amount for Strowallet
+            FundCardJob::dispatch($user, $id, $usdAmount, $wallet->id, $deduction);
 
             return $this->success('Card funding in progress.');
 

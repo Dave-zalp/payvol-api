@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Integrations\Strowallet\StrowalletService;
+use App\Jobs\USD\FetchCardDetailsJob;
 use App\Models\CardTransaction;
 use App\Models\Transaction;
 use App\Models\VirtualCard;
@@ -92,10 +93,10 @@ class StrowalletCardService
                 );
             }
 
-            DB::transaction(function () use ($user, $data, $response, $platformTx) {
+            $virtualCard = DB::transaction(function () use ($user, $data, $response, $platformTx) {
                 $platformTx->markSuccess();
 
-                VirtualCard::create([
+                return VirtualCard::create([
                     'user_id'         => $user->id,
                     'card_id'         => $data['card_id'],
                     'card_user_id'    => $data['card_user_id'] ?? null,
@@ -109,6 +110,10 @@ class StrowalletCardService
                     'response'        => $response,
                 ]);
             });
+
+            // Fetch and store full card details (card number, CVV, expiry, billing, etc.)
+            // Delayed 15s to allow Strowallet to finish provisioning the card
+            FetchCardDetailsJob::dispatch($virtualCard->id)->delay(now()->addSeconds(15));
 
             return $data;
 
@@ -304,7 +309,25 @@ class StrowalletCardService
             );
         }
 
-        return $response['response']['card_detail'];
+        $detail = $response['response']['card_detail'];
+
+        // Sync the local record with whatever Strowallet returns right now
+        $card->update(array_filter([
+            'card_status'      => $detail['card_status'] ?? null,
+            'card_number'      => $detail['card_number'] ?? null,
+            'last4'            => $detail['last4'] ?? null,
+            'cvv'              => $detail['cvv'] ?? null,
+            'expiry'           => $detail['expiry'] ?? null,
+            'balance'          => $detail['balance'] ?? null,
+            'customer_email'   => $detail['customer_email'] ?? null,
+            'billing_country'  => $detail['billing_country'] ?? null,
+            'billing_city'     => $detail['billing_city'] ?? null,
+            'billing_street'   => $detail['billing_street'] ?? null,
+            'billing_zip_code' => $detail['billing_zip_code'] ?? null,
+            'card_details'     => $response,
+        ], fn($value) => !is_null($value)));
+
+        return $detail;
     }
 
     public function getCardTransactions(User $user, string $id): array
