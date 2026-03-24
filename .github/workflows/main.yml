@@ -77,7 +77,7 @@ jobs:
             php artisan migrate
 
             echo "🗄️ Seed table..."
-            php artisan db:seed
+            php artisan db:seed --class=WalletSeeder
 
             # echo "☁️ Installing Cloudinary (if not already configured)..."
             # php artisan cloudinary:install || true
